@@ -3,14 +3,14 @@
 This document covers arguments for:
 
 ```bash
-python src/orchestrator/backfill/refresh.py [options]
+python src/orchestrator/backfill/update/refresh.py [options]
 ```
 
 ## What `refresh.py` does
 
-1. Loads existing tickers from `tickers.json`.
+1. Loads existing tickers from `extra_tickers/nasdaq_tickers.json`.
 2. Fetches latest S&P 500, commodity, and crypto tickers.
-3. Merges + de-duplicates ticker list and writes updated `tickers.json`.
+3. Merges + de-duplicates ticker list and writes updated `extra_tickers/nasdaq_tickers.json`.
 4. Optionally runs concurrent backfill unless `--skip-backfill` is set.
 
 ## Arguments
@@ -46,7 +46,7 @@ python src/orchestrator/backfill/refresh.py [options]
 - Useful for validation and timing checks.
 
 ### `--skip-backfill`
-- Only refreshes `tickers.json`.
+- Only refreshes `extra_tickers/nasdaq_tickers.json`.
 - Does **not** run backfill.
 
 ## Validation behavior
@@ -59,13 +59,13 @@ python src/orchestrator/backfill/refresh.py [options]
 ### Refresh tickers only
 
 ```bash
-python src/orchestrator/backfill/refresh.py --skip-backfill
+python src/orchestrator/backfill/update/refresh.py --skip-backfill
 ```
 
 ### Dry-run backfill for explicit date range
 
 ```bash
-python src/orchestrator/backfill/refresh.py \
+python src/orchestrator/backfill/update/refresh.py \
   --start 010126 --end 010226 \
   --threads 8 --interval 1 \
   --dry-run --on-conflict ignore
@@ -74,10 +74,11 @@ python src/orchestrator/backfill/refresh.py \
 ### Full backfill with defaults
 
 ```bash
-python src/orchestrator/backfill/refresh.py
+python src/orchestrator/backfill/update/refresh.py
 ```
 
 ## Notes
 
-- Ticker file path is fixed to `src/orchestrator/backfill/tickers.json`.
+- Ticker file path is fixed to `src/orchestrator/backfill/update/extra_tickers/nasdaq_tickers.json`.
+- Crypto and reference files are read/written under `src/orchestrator/backfill/update/extra_tickers/`.
 - `--exchange` is lowercased before passing into `concurrent_backfill`.

@@ -5,20 +5,25 @@ Handles large-scale intraday data backfilling from FMP.
 Uses caching (temporary CSV storage) to avoid RAM overflow.
 """
 
+import logging
 import os
 import time
+from datetime import date, datetime
+from typing import List, Optional, Union
+
 import pandas as pd
-from typing import List
-from datetime import datetime
+
 from src.orchestrator.marketData.fmpMarketData import FMPMarketData
-import logging
+
 logger = logging.getLogger(__name__)
 
 # Batch size: number of days per API call (e.g., 2 means requesting 2 days at once)
 BATCH_DAYS = 3
 
 # Directory for storing temporary CSVs
-TEMP_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../../data/backfill_cache"))
+TEMP_DIR = os.path.abspath(
+    os.path.join(os.path.dirname(__file__), "../../../data/backfill_cache")
+)
 
 os.makedirs(TEMP_DIR, exist_ok=True)  # Ensure the directory exists
 
@@ -27,10 +32,24 @@ def convert_to_date(date_value):
     """Converts a string or datetime to a date object."""
     if isinstance(date_value, str):
         return datetime.strptime(date_value, "%Y-%m-%d").date()
-    return date_value
+    if isinstance(date_value, datetime):
+        return date_value.date()
+    if isinstance(date_value, date):
+        return date_value
+    raise TypeError(
+        f"Unsupported date type: {type(date_value).__name__}. "
+        "Expected str, datetime, or date."
+    )
 
 
-def generate_output_filename(tickers, start_date, end_date, interval, exchange, output_filename):
+def generate_output_filename(
+    tickers: List[str],
+    start_date: date,
+    end_date: date,
+    interval: int,
+    exchange: Optional[str],
+    output_filename: Optional[str],
+):
     """
     Generates a dynamic output filename if:
     - `output_filename` is None, OR
@@ -40,11 +59,15 @@ def generate_output_filename(tickers, start_date, end_date, interval, exchange, 
     """
     if not output_filename or output_filename == "backfilled_data.csv":
         ticker_str = tickers[0] if len(tickers) == 1 else "multiple_tickers"
-        date_range_str = f"{start_date.strftime('%Y%m%d')}_{end_date.strftime('%Y%m%d')}"
+        date_range_str = (
+            f"{start_date.strftime('%Y%m%d')}_{end_date.strftime('%Y%m%d')}"
+        )
         interval_str = f"{interval}min"
         exchange_str = exchange.lower() if exchange else "nasdaq"
-        output_filename = f"backfill_{ticker_str}_{date_range_str}_{interval_str}_{exchange_str}.csv"
-    
+        output_filename = (
+            f"backfill_{ticker_str}_{date_range_str}_{interval_str}_{exchange_str}.csv"
+        )
+
     return os.path.join(TEMP_DIR, output_filename)
 
 
@@ -58,23 +81,32 @@ def prepare_data(df_chunk, ticker):
         # rename 'date' → 'datetime'
         df_chunk.rename(columns={"date": "datetime"}, inplace=True)
         df_chunk["datetime"] = pd.to_datetime(df_chunk["datetime"])
-    
+
     df_chunk["ticker"] = ticker
     df_chunk["date"] = df_chunk["datetime"].dt.date
 
-    column_order = ["ticker", "date", "datetime", "open", "high", "low", "close", "volume"]
+    column_order = [
+        "ticker",
+        "date",
+        "datetime",
+        "open",
+        "high",
+        "low",
+        "close",
+        "volume",
+    ]
     df_chunk = df_chunk[column_order]
     return df_chunk
 
 
 def backfill_data(
     tickers: List[str],
-    start_date,
-    end_date,
+    start_date: Union[str, date],
+    end_date: Union[str, date],
     interval: int,
-    exchange: str | None = None,
-    output_filename: str | None = "backfilled_data.csv",
-):
+    exchange: Optional[str] = None,
+    output_filename: Optional[str] = "backfilled_data.csv",
+) -> Optional[pd.DataFrame]:
     """
     Pulls intraday data from FMP for each ticker from start_date to end_date,
     writes data incrementally to a CSV to prevent memory issues, and
@@ -93,8 +125,10 @@ def backfill_data(
     start_date = convert_to_date(start_date)
     end_date = convert_to_date(end_date)
 
-    print(f"Starting backfill for {tickers} from {start_date} to {end_date}, "
-          f"interval={interval}min, exchange={exchange}")
+    print(
+        f"Starting backfill for {tickers} from {start_date} to {end_date}, "
+        f"interval={interval}min, exchange={exchange}"
+    )
 
     # 2) Prepare an instance of FMPMarketData
     fmp = FMPMarketData()
@@ -106,13 +140,17 @@ def backfill_data(
         return pd.DataFrame() if output_filename is None else None
 
     # 4) Group business days into batches
-    grouped_dates = [all_dates[i : i + BATCH_DAYS] for i in range(0, len(all_dates), BATCH_DAYS)]
+    grouped_dates = [
+        all_dates[i : i + BATCH_DAYS] for i in range(0, len(all_dates), BATCH_DAYS)
+    ]
 
     # 5) Generate the output path if output_filename is provided
     #    (or auto-generate one if it's the default)
     output_path = None
     if output_filename is not None:
-        output_path = generate_output_filename(tickers, start_date, end_date, interval, exchange, output_filename)
+        output_path = generate_output_filename(
+            tickers, start_date, end_date, interval, exchange, output_filename
+        )
         # Ensure the file is empty before appending data
         if os.path.exists(output_path):
             os.remove(output_path)
@@ -128,7 +166,9 @@ def backfill_data(
             from_date_str = date_group[0].strftime("%Y-%m-%d")
             to_date_str = date_group[-1].strftime("%Y-%m-%d")
 
-            logger.info(f"[Backfill] Fetching {ticker} from {from_date_str} to {to_date_str}...")
+            logger.info(
+                f"[Backfill] Fetching {ticker} from {from_date_str} to {to_date_str}..."
+            )
             # Attempt up to 2 tries per batch
             attempt = 0
             success = False
@@ -141,14 +181,13 @@ def backfill_data(
                         to_date=to_date_str,
                         interval=interval,
                     )
-                    #!add etf call here
                     if data_chunk is None:
                         data_chunk = fmp.get_historical_data(
                             tickers=ticker,
                             from_date=from_date_str,
                             to_date=to_date_str,
                         )
-                    
+
                     # If data is valid
                     if data_chunk and isinstance(data_chunk, list):
                         df_chunk = pd.DataFrame(data_chunk)
@@ -166,20 +205,26 @@ def backfill_data(
                                     header=(not os.path.exists(output_path)),
                                 )
                         else:
-                            logger.warning(f"  [Backfill] No data returned for {ticker} "
-                                  f"from {from_date_str} to {to_date_str}.")
+                            logger.warning(
+                                f"  [Backfill] No data returned for {ticker} "
+                                f"from {from_date_str} to {to_date_str}."
+                            )
                     success = True
 
                 except Exception as ex:
-                    logger.error(f"[Backfill:ERROR] Attempt {attempt} error fetching {ticker} "
-                          f"from {from_date_str} to {to_date_str}: {ex}")
+                    logger.error(
+                        f"[Backfill:ERROR] Attempt {attempt} error fetching {ticker} "
+                        f"from {from_date_str} to {to_date_str}: {ex}"
+                    )
                     time.sleep(1)  # small wait before retry
 
     # 8) Print completion message
     if output_path:
         logger.info(f"[Backfill] Completed. Data saved to {output_path}")
     else:
-        logger.info("[Backfill] Completed. No CSV file generated (output_filename=None).")
+        logger.info(
+            "[Backfill] Completed. No CSV file generated (output_filename=None)."
+        )
 
     # 9) If output_filename=None, return the combined in-memory DataFrame
     if output_filename is None:

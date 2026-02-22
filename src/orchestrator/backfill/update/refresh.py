@@ -6,13 +6,13 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 # Setup path for imports
-SRC_ROOT = Path(__file__).resolve().parents[2]
+SRC_ROOT = Path(__file__).resolve().parents[3]
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 try:
-    from orchestrator.marketData.fmpMarketData import FMPMarketData
     from orchestrator.backfill.concurrent_backfill import concurrent_backfill
+    from orchestrator.marketData.fmpMarketData import FMPMarketData
 except Exception as e:
     logging.error(f"Failed to import required modules: {e}")
     raise
@@ -22,6 +22,10 @@ logging.basicConfig(
     level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s"
 )
 logger = logging.getLogger(__name__)
+
+SCRIPT_DIR = Path(__file__).resolve().parent
+EXTRA_TICKERS_DIR = SCRIPT_DIR / "extra_tickers"
+TICKERS_FILE = EXTRA_TICKERS_DIR / "nasdaq_tickers.json"
 
 
 def load_existing_tickers(tickers_path: Path) -> list[str]:
@@ -48,6 +52,7 @@ def load_existing_tickers(tickers_path: Path) -> list[str]:
 def save_tickers(tickers: list[str], tickers_path: Path) -> None:
     """Save tickers to JSON file."""
     try:
+        tickers_path.parent.mkdir(parents=True, exist_ok=True)
         with open(tickers_path, "w") as f:
             json.dump(tickers, f, indent=2)
         logger.info(f"Saved {len(tickers)} tickers to {tickers_path.name}")
@@ -68,7 +73,7 @@ def fetch_and_merge_tickers(
         # Fetch commodity tickers
         commodity_tickers = fmp.get_commodity_tickers()
         logger.info(f"Fetched {len(commodity_tickers)} commodity tickers from FMP")
-    
+
         crypto = fmp.get_crypto_tickers()
         logger.info(f"Fetched {len(crypto)} crypto tickers from FMP")
 
@@ -151,7 +156,7 @@ def main():
     args = parse_cli_arguments()
 
     # Get tickers file path
-    tickers_path = Path(__file__).parent / "tickers.json"
+    tickers_path = TICKERS_FILE
 
     # Load existing tickers
     existing_tickers = load_existing_tickers(tickers_path)

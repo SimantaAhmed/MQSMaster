@@ -1,18 +1,25 @@
+import json
 import logging
+import os
 import sys
+import tempfile
 import threading
 import time
 from pathlib import Path
+from typing import List, Optional
 
 import requests
 
 SRC_ROOT = Path(__file__).resolve().parents[2]
+BACKFILL_DIR = SRC_ROOT / "orchestrator" / "backfill"
+SP500_TICKERS_PATH = BACKFILL_DIR / "update" / "extra_tickers" / "sp500_tickers.json"
+COMMODITY_TICKERS_PATH = BACKFILL_DIR / "update" / "extra_tickers" / "commodity_tickers.json"
 if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 try:
     from common.auth.apiAuth import APIAuth
-    from orchestrator.backfill.crypto_tickers import (
+    from orchestrator.backfill.update.crypto_tickers import (
         format_for_fmp,
         get_top_crypto_from_coingecko,
         load_reference_list,
@@ -320,17 +327,53 @@ class FMPMarketData:
             self.logger.error(f"Price fetch failed for {ticker}: {e}")
             return 0.0
 
-    def get_SP500_tickers(self) -> list[str]:
+    def _write_json_atomic(self, target_path: Path, tickers: List[str], label: str) -> bool:
+        temp_path: Optional[Path] = None
+        try:
+            target_path.parent.mkdir(parents=True, exist_ok=True)
+            with tempfile.NamedTemporaryFile(
+                mode="w",
+                dir=target_path.parent,
+                prefix=f".{target_path.name}.",
+                suffix=".tmp",
+                delete=False,
+                encoding="utf-8",
+            ) as temp_file:
+                json.dump(tickers, temp_file, indent=2)
+                temp_file.flush()
+                os.fsync(temp_file.fileno())
+                temp_path = Path(temp_file.name)
+
+            os.replace(temp_path, target_path)
+            return True
+        except (OSError, IOError) as error:
+            self.logger.error(
+                "[FMP API] Failed to write %s (%s tickers) to %s: %s",
+                label,
+                len(tickers),
+                target_path,
+                error,
+                exc_info=True,
+            )
+            if temp_path and temp_path.exists():
+                try:
+                    temp_path.unlink()
+                except OSError:
+                    pass
+            return False
+
+    def get_sp500_tickers(self) -> list[str]:
         """
         Fetches the list of S&P 500 tickers from FMP API.
         Returns a list of ticker symbols.
+        File write errors are logged and do not change the returned ticker list.
         """
         url = "https://financialmodelingprep.com/stable/sp500-constituent"
         params = {"apikey": self.fmp_api_key}
 
         data = self._make_request(url, params)
         if not data:
-            logging.error("[FMP API] Failed to fetch S&P 500 tickers.")
+            self.logger.error("[FMP API] Failed to fetch S&P 500 tickers.")
             return []
 
         tickers = [
@@ -341,8 +384,9 @@ class FMPMarketData:
             and item.get("symbol").strip()
         ]
         if not tickers:
-            logging.error("[FMP API] No valid S&P 500 ticker symbols found.")
+            self.logger.error("[FMP API] No valid S&P 500 ticker symbols found.")
             return []
+        self._write_json_atomic(SP500_TICKERS_PATH, tickers, "S&P 500 tickers")
         return tickers
 
     def get_crypto_tickers(self) -> list[str]:
@@ -359,7 +403,7 @@ class FMPMarketData:
             )
 
         except Exception as e:
-            logging.error("Error fetching crypto data for formatting: %s", e, exc_info=True)
+            self.logger.error("Error fetching crypto data for formatting: %s", e, exc_info=True)
             return []
 
         symbols = []
@@ -371,7 +415,7 @@ class FMPMarketData:
                 symbols.append(symbol)
 
         if not symbols:
-            logging.error("[FMP API] Error parsing crypto ticker symbols.")
+            self.logger.error("[FMP API] Error parsing crypto ticker symbols.")
             return []
 
         save_crypto_details(fmp_tickers, log_summary=False)
@@ -381,13 +425,14 @@ class FMPMarketData:
         """
         Fetches the list of commodity tickers from FMP API.
         Returns a list of ticker symbols.
+        File write errors are logged and do not change the returned ticker list.
         """
         url = "https://financialmodelingprep.com/stable/batch-commodity-quotes"
         params = {"apikey": self.fmp_api_key}
 
         data = self._make_request(url, params)
         if not data:
-            logging.error("[FMP API] Failed to fetch commodity tickers.")
+            self.logger.error("[FMP API] Failed to fetch commodity tickers.")
             return []
 
         tickers = [
@@ -398,14 +443,15 @@ class FMPMarketData:
             and item.get("symbol").strip()
         ]
         if not tickers:
-            logging.error("[FMP API] No valid commodity ticker symbols found.")
+            self.logger.error("[FMP API] No valid commodity ticker symbols found.")
             return []
+        self._write_json_atomic(COMMODITY_TICKERS_PATH, tickers, "commodity tickers")
         return tickers
 
 
 if __name__ == "__main__":
     fmp = FMPMarketData()
-    sp500_tickers = fmp.get_SP500_tickers()
+    sp500_tickers = fmp.get_sp500_tickers()
     print(f"First 10 S&P 500 Tickers:\n {sp500_tickers[:10]}")
 
     crypto_tickers = fmp.get_crypto_tickers()

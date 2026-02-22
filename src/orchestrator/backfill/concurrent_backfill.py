@@ -9,18 +9,18 @@ Results:
   - Data is injected directly into the 'market_data' table in the database using MQSDBConnector.
 """
 
-import sys
-import os
-from datetime import datetime
-from concurrent.futures import ThreadPoolExecutor
-from psycopg2.extras import execute_values
-import json
 import logging
+import os
+import sys
+from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
+
+from psycopg2.extras import execute_values
 
 # Ensure we can import backfill.py
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "../../..")))
-from src.orchestrator.backfill.backfill import backfill_data
 from src.common.database.MQSDBConnector import MQSDBConnector
+from src.orchestrator.backfill.backfill import backfill_data
 
 logger = logging.getLogger(__name__)
 # Number of threads to use. NEEDS TO BE LESS THAN MQSDBCONNECTOR MAX CONN VALUE!
@@ -32,16 +32,47 @@ def parse_date_arg(date_str):
     try:
         return datetime.strptime(date_str, "%d%m%y").date()
     except ValueError:
-        print(f"❌ Invalid date format: {date_str}. Expected format: DDMMYY (e.g., 040325 for March 4, 2025).")
+        print(
+            f"❌ Invalid date format: {date_str}. Expected format: DDMMYY (e.g., 040325 for March 4, 2025)."
+        )
         sys.exit(1)
 
 
-def backfill_single_ticker(ticker, start_date, end_date, interval, exchange, db_connector, dry_run=False, on_conflict='fail'):
+def parse_main_args(argv: list[str]) -> tuple[str, str]:
+    start_date_arg = None
+    end_date_arg = None
+
+    for arg in argv:
+        if arg.startswith("startdate="):
+            start_date_arg = arg.split("=", 1)[1]
+        elif arg.startswith("enddate="):
+            end_date_arg = arg.split("=", 1)[1]
+
+    if not start_date_arg or not end_date_arg:
+        print("❌ Missing required arguments: startdate and enddate.")
+        print("Usage: python3 concurrent_backfill.py startdate=DDMMYY enddate=DDMMYY")
+        sys.exit(1)
+
+    return start_date_arg, end_date_arg
+
+
+def backfill_single_ticker(
+    ticker,
+    start_date,
+    end_date,
+    interval,
+    exchange,
+    db_connector,
+    dry_run=False,
+    on_conflict="fail",
+    exchange_map=None,
+):
     """
     Calls backfill_data(...) for a single ticker and injects data into the DB.
     This function now receives a shared MQSDBConnector instance.
     """
     conn = None
+    effective_exchange = (exchange_map or {}).get(ticker.upper(), exchange or "nasdaq")
     try:
         # Fetch the data in-memory (output_filename=None => returns DataFrame)
         df = backfill_data(
@@ -49,8 +80,8 @@ def backfill_single_ticker(ticker, start_date, end_date, interval, exchange, db_
             start_date=start_date,
             end_date=end_date,
             interval=interval,
-            exchange=exchange,
-            output_filename=None
+            exchange=effective_exchange,
+            output_filename=None,
         )
 
         # Check if data was returned and not empty
@@ -67,17 +98,19 @@ def backfill_single_ticker(ticker, start_date, end_date, interval, exchange, db_
         insert_data = []
         for _, row in df.iterrows():
             try:
-                insert_data.append((
-                    row['ticker'],
-                    row['datetime'],  # timestamp
-                    row['date'],
-                    exchange.lower() if exchange else 'nasdaq',
-                    float(row['open']),
-                    float(row['high']),
-                    float(row['low']),
-                    float(row['close']),
-                    int(float(row['volume'])),
-                ))
+                insert_data.append(
+                    (
+                        row["ticker"],
+                        row["datetime"],  # timestamp
+                        row["date"],
+                        effective_exchange.lower() if effective_exchange else "nasdaq",
+                        float(row["open"]),
+                        float(row["high"]),
+                        float(row["low"]),
+                        float(row["close"]),
+                        int(float(row["volume"])),
+                    )
+                )
             except Exception as parse_ex:
                 print(f"[{ticker}] Skipping row due to parsing error: {parse_ex}")
                 continue
@@ -99,7 +132,7 @@ def backfill_single_ticker(ticker, start_date, end_date, interval, exchange, db_
             conn.commit()
             print(f"[{ticker}] Inserted {len(insert_data)} rows into DB.")
         elif dry_run:
-            logger.info(f"[{ticker}:DRY_RUN] Rows prepared: {len(insert_data)}.") 
+            logger.info(f"[{ticker}:DRY_RUN] Rows prepared: {len(insert_data)}.")
         else:
             print(f"[{ticker}] No valid rows to insert.")
 
@@ -111,7 +144,17 @@ def backfill_single_ticker(ticker, start_date, end_date, interval, exchange, db_
             db_connector.release_connection(conn)
 
 
-def concurrent_backfill(tickers, start_date, end_date, interval, exchange=None, dry_run=False, on_conflict='fail', threads=MAX_WORKERS):
+def concurrent_backfill(
+    tickers,
+    start_date,
+    end_date,
+    interval,
+    exchange=None,
+    exchange_map=None,
+    dry_run=False,
+    on_conflict="fail",
+    threads=MAX_WORKERS,
+):
     """
     Spawns multiple threads, each calling 'backfill_data' for a single ticker.
     Injects each ticker's results directly into the DB using a shared connector.
@@ -121,17 +164,37 @@ def concurrent_backfill(tickers, start_date, end_date, interval, exchange=None, 
     if isinstance(end_date, str):
         end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
 
+    display_exchange = exchange
+    if exchange_map:
+        unique_exchanges = sorted(set(exchange_map.values()))
+        display_exchange = (
+            unique_exchanges[0] if len(unique_exchanges) == 1 else "mixed"
+        )
+
     print(f"[ConcurrentBackfill] Starting concurrency for {len(tickers)} tickers.")
-    print(f"  Date range: {start_date} to {end_date}, interval={interval} min, exchange={exchange}")
+    print(
+        f"  Date range: {start_date} to {end_date}, interval={interval} min, exchange={display_exchange}"
+    )
     print(f"  Using up to {threads} threads.")
-    
+
     # Create ONE shared database connector instance
     db_connector = MQSDBConnector()
     try:
         with ThreadPoolExecutor(max_workers=threads) as executor:
             # Pass the single db_connector instance to each worker
             futures = [
-                executor.submit(backfill_single_ticker, ticker, start_date, end_date, interval, exchange, db_connector, dry_run, on_conflict)
+                executor.submit(
+                    backfill_single_ticker,
+                    ticker,
+                    start_date,
+                    end_date,
+                    interval,
+                    exchange,
+                    db_connector,
+                    dry_run,
+                    on_conflict,
+                    exchange_map,
+                )
                 for ticker in tickers
             ]
             for fut in futures:
@@ -143,49 +206,3 @@ def concurrent_backfill(tickers, start_date, end_date, interval, exchange=None, 
         # Ensure all pool connections are closed at the end
         print("[ConcurrentBackfill] All threads completed. Closing connection pool.")
         db_connector.close_all_connections()
-
-
-if __name__ == "__main__":
-    # 1. Load tickers from tickers.json
-    script_dir = os.path.dirname(__file__)
-    ticker_file_path = os.path.join(script_dir, '..', 'tickers.json')
-
-    try:
-        with open(ticker_file_path, 'r') as f:
-            MY_TICKERS = json.load(f)
-    except FileNotFoundError:
-        print(f"Error: Ticker file not found at {ticker_file_path}. Please create it.")
-        sys.exit(1)
-    except json.JSONDecodeError:
-        print(f"Error: Invalid JSON in {ticker_file_path}. Please check the file format.")
-        sys.exit(1)
-
-    # 2. Parse command-line arguments
-    start_date_arg = None
-    end_date_arg = None
-
-    for arg in sys.argv[1:]:
-        if arg.startswith("startdate="):
-            start_date_arg = arg.split("=")[1]
-        elif arg.startswith("enddate="):
-            end_date_arg = arg.split("=")[1]
-
-    if not start_date_arg or not end_date_arg:
-        print("❌ Missing required arguments: startdate and enddate.")
-        print("Usage: python3 concurrentbackfill.py startdate=DDMMYY enddate=DDMMYY")
-        sys.exit(1)
-
-    # Parse date strings
-    start_date = parse_date_arg(start_date_arg)
-    end_date = parse_date_arg(end_date_arg)
-
-    # 3. Call concurrent backfill
-    concurrent_backfill(
-        tickers=MY_TICKERS,
-        start_date=start_date,
-        end_date=end_date,
-        interval=1,
-        exchange="NASDAQ",
-    )
-
-    print("✅ Concurrent backfill completed and data inserted into the database.")

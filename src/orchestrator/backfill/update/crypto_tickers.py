@@ -3,9 +3,9 @@
 Also supports symbol matching against a provided reference list (like a large FMP
 crypto symbol universe) so your top-500 list aligns with that symbol style.
 """
-import logging
 
 import json
+import logging
 import os
 import re
 import time
@@ -13,10 +13,11 @@ import time
 import requests
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-TICKERS_JSON_PATH = os.path.join(SCRIPT_DIR, "tickers.json")
-CRYPTO_TICKERS_PATH = os.path.join(SCRIPT_DIR, "crypto_tickers.json")
+EXTRA_TICKERS_DIR = os.path.join(SCRIPT_DIR, "extra_tickers")
+TICKERS_JSON_PATH = os.path.join(EXTRA_TICKERS_DIR, "nasdaq_tickers.json")
+CRYPTO_TICKERS_PATH = os.path.join(EXTRA_TICKERS_DIR, "crypto_tickers.json")
 TOP_CRYPTO_LIMIT = 500
-REFERENCE_JSON_PATH = os.path.join(SCRIPT_DIR, "reference_crypto.json")
+REFERENCE_JSON_PATH = os.path.join(EXTRA_TICKERS_DIR, "reference_crypto.json")
 
 
 def normalize_symbol(symbol: str) -> str:
@@ -42,7 +43,7 @@ def get_top_crypto_from_coingecko(limit: int = 500) -> list[dict]:
             response.raise_for_status()
             coins = response.json()
             all_coins.extend(coins)
-            time.sleep(.2)
+            time.sleep(0.2)
         except Exception as exc:
             logging.error(f"  Error on page {page}: {exc}")
             break
@@ -51,9 +52,6 @@ def get_top_crypto_from_coingecko(limit: int = 500) -> list[dict]:
 
 
 def load_reference_list() -> list[dict]:
-    if not REFERENCE_JSON_PATH:
-        return []
-
     if not os.path.exists(REFERENCE_JSON_PATH):
         logging.error(
             f"No reference file found at {REFERENCE_JSON_PATH}, skipping symbol matching."
@@ -61,7 +59,7 @@ def load_reference_list() -> list[dict]:
         return []
 
     try:
-        with open(REFERENCE_JSON_PATH, "r") as handle:
+        with open(REFERENCE_JSON_PATH, "r", encoding="utf-8") as handle:
             data = json.load(handle)
             if isinstance(data, list):
                 return data
@@ -159,6 +157,7 @@ def save_crypto_details(crypto_tickers: list[dict], log_summary: bool = True) ->
 
     duplicate_count = original_count - len(deduped_symbols)
 
+    os.makedirs(os.path.dirname(CRYPTO_TICKERS_PATH), exist_ok=True)
     with open(CRYPTO_TICKERS_PATH, "w") as handle:
         json.dump(deduped_symbols, handle, indent=2)
     if log_summary:
