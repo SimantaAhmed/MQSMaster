@@ -65,13 +65,15 @@ def fetch_and_merge_tickers(
         sp500 = fmp.get_SP500_tickers()
         logger.info(f"Fetched {len(sp500)} S&P 500 tickers from FMP")
 
-        # TODO: Uncomment when crypto support is needed
-        # crypto = fmp.get_crypto_tickers()
-        # logger.info(f"Fetched {len(crypto)} crypto tickers from FMP")
-        # new_tickers = sp500 + crypto
+        # Fetch commodity tickers
+        commodity_tickers = fmp.get_commodity_tickers()
+        logger.info(f"Fetched {len(commodity_tickers)} commodity tickers from FMP")
+    
+        crypto = fmp.get_crypto_tickers()
+        logger.info(f"Fetched {len(crypto)} crypto tickers from FMP")
 
-        new_tickers = sp500
-
+        new_tickers = sp500 + commodity_tickers + crypto
+        logger.info(f"Total new tickers fetched: {len(new_tickers)}")
         # Merge and deduplicate using set operations (much faster than pandas)
         combined = list(set(existing_tickers) | set(new_tickers))
         combined.sort()  # Keep consistent ordering
@@ -134,6 +136,15 @@ def parse_cli_arguments() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def parse_date_or_exit(value: str, arg_name: str):
+    """Parse a DDMMYY date argument or exit with a clear message."""
+    try:
+        return datetime.strptime(value, "%d%m%y").date()
+    except ValueError:
+        logger.error(f"Invalid {arg_name} date '{value}'. Expected format: DDMMYY")
+        raise SystemExit(2)
+
+
 def main():
     """Main execution function."""
     # Parse arguments early
@@ -163,14 +174,20 @@ def main():
 
     # Parse dates for backfill
     if args.end:
-        end_date = datetime.strptime(args.end, "%d%m%y").date()
+        end_date = parse_date_or_exit(args.end, "--end")
     else:
         end_date = datetime.now().date()
 
     if args.start:
-        start_date = datetime.strptime(args.start, "%d%m%y").date()
+        start_date = parse_date_or_exit(args.start, "--start")
     else:
         start_date = end_date - timedelta(days=30)
+
+    if start_date > end_date:
+        logger.error(
+            f"Invalid date range: start date {start_date} is after end date {end_date}"
+        )
+        raise SystemExit(2)
 
     # Display backfill configuration
     print(f"\n{'=' * 60}")

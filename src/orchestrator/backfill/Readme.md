@@ -78,7 +78,12 @@ Concurrent multi‑ticker ingest (8 threads):
 python -m src.orchestrator.backfill.backfill_cli concurrent \
 	--start 010125 --end 310125 --tickers AAPL MSFT AMD INTC META \
 	--interval 1 --threads 8 --on-conflict ignore
+python -m src.orchestrator.backfill.backfill_cli concurrent \
+	--start 010125 --end 310125 --tickers AAPL MSFT AMD INTC META \
+	--interval 1 --threads 8 --on-conflict ignore
 ```
+```
+
 
 Dry run for all tickers in `tickers.json` (no explicit tickers passed):
 ```

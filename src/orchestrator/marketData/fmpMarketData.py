@@ -12,6 +12,12 @@ if str(SRC_ROOT) not in sys.path:
 
 try:
     from common.auth.apiAuth import APIAuth
+    from orchestrator.backfill.crypto_tickers import (
+        format_for_fmp,
+        get_top_crypto_from_coingecko,
+        load_reference_list,
+        save_crypto_details,
+    )
 except Exception as e:
     logging.error(f"Failed to import APIAuth after adding src to sys.path. {e}")
     raise
@@ -48,43 +54,63 @@ class FMPMarketData:
         self.MAX_RETRIES = 6
         self.TIMEOUT_SECONDS = 10  # Prevents script from freezing on a request
 
+        # Crypto ticker retrieval defaults
+        self.CRYPTO_TOP_LIMIT = 500
+
+        # Connectivity recovery defaults
+        self.INTERNET_RETRY_INTERVAL_SECONDS = 10
+        self.INTERNET_MAX_WAIT_SECONDS = 120
+
         # A lock to protect rate-limiter data (request_timestamps), etc.
         self._lock = threading.Lock()
 
     def _check_rate_limit(self):
         """
         Enforces API rate limits in a thread-safe manner.
-        If the limit is exceeded, it waits.
+        If the limit is exceeded, it waits outside the lock.
         """
-        with self._lock:
-            current_time = time.time()
+        while True:
+            wait_time = 0.0
+            with self._lock:
+                current_time = time.time()
 
-            # Remove timestamps older than the rate limit window (60 seconds)
-            self.request_timestamps = [
-                t
-                for t in self.request_timestamps
-                if (current_time - t) < self.LOCK_WINDOW_SECONDS
-            ]
+                # Remove timestamps older than the rate limit window (60 seconds)
+                self.request_timestamps = [
+                    t
+                    for t in self.request_timestamps
+                    if (current_time - t) < self.LOCK_WINDOW_SECONDS
+                ]
 
-            # If we are at or above the limit, wait
-            if len(self.request_timestamps) >= self.MAX_REQUESTS_PER_MIN:
+                # If under the limit, reserve a slot and proceed
+                if len(self.request_timestamps) < self.MAX_REQUESTS_PER_MIN:
+                    self.request_timestamps.append(current_time)
+                    return
+
+                # Otherwise compute wait time until the oldest timestamp expires
                 wait_time = self.LOCK_WINDOW_SECONDS - (
                     current_time - self.request_timestamps[0]
                 )
-                if wait_time > 0:
-                    print(
-                        f"[RateLimiter] Hit API limit ({self.MAX_REQUESTS_PER_MIN} calls/min). Sleeping for {wait_time:.2f} s..."
-                    )
-                    time.sleep(wait_time)
 
-            # Record timestamp for this request
-            self.request_timestamps.append(time.time())
+            if wait_time > 0:
+                self.logger.warning(
+                    "[RateLimiter] Hit API limit (%s calls/min). Sleeping for %.2f s...",
+                    self.MAX_REQUESTS_PER_MIN,
+                    wait_time,
+                )
+                time.sleep(wait_time)
+            else:
+                time.sleep(0)
 
-    def _wait_for_internet(self):
+    def _wait_for_internet(self, max_wait_seconds=None):
         """
-        Keeps retrying until the internet is restored (thread-safe approach).
+        Keeps retrying until the internet is restored (thread-safe approach),
+        with an optional max wait to avoid blocking forever.
         All threads that lose connection will call this.
         """
+        if max_wait_seconds is None:
+            max_wait_seconds = self.INTERNET_MAX_WAIT_SECONDS
+        start_time = time.time()
+
         # We could add a global or shared lock here so only
         # one thread checks connectivity, but it's simpler
         # to allow each thread to do it if they're stuck.
@@ -93,11 +119,21 @@ class FMPMarketData:
                 requests.get(
                     "https://www.google.com", timeout=5
                 )  # Check internet access
-                print("[Internet] Connection restored ✅")
-                return  # Exit loop when internet is back
+                self.logger.info("[Internet] Connection restored")
+                return True  # Exit loop when internet is back
             except requests.exceptions.ConnectionError:
-                print("[Internet] No connection. Retrying in 10 seconds...")
-                time.sleep(10)  # Wait before retrying
+                elapsed = time.time() - start_time
+                if elapsed >= max_wait_seconds:
+                    self.logger.warning(
+                        "[Internet] Still offline after %ss. Proceeding with retry limits.",
+                        max_wait_seconds,
+                    )
+                    return False
+                self.logger.warning(
+                    "[Internet] No connection. Retrying in %s seconds...",
+                    self.INTERNET_RETRY_INTERVAL_SECONDS,
+                )
+                time.sleep(self.INTERNET_RETRY_INTERVAL_SECONDS)
 
     def _make_request(self, url, params):
         """
@@ -116,34 +152,54 @@ class FMPMarketData:
                 if response.status_code == 200:
                     return response.json()
 
-                print(
-                    f"[FMP API] Warning: Received {response.status_code} - {response.text} (Attempt {attempt}/{self.MAX_RETRIES})"
+                self.logger.warning(
+                    "[FMP API] Received %s - %s (Attempt %s/%s)",
+                    response.status_code,
+                    response.text,
+                    attempt,
+                    self.MAX_RETRIES,
                 )
 
                 # If it's a 429 (Too Many Requests), wait longer (exponential backoff)
                 if response.status_code == 429:
-                    print("[FMP API] Too many requests. Waiting before retrying...")
+                    self.logger.warning(
+                        "[FMP API] Too many requests. Waiting before retrying..."
+                    )
                     time.sleep(10 * attempt)
 
             except requests.exceptions.Timeout:
-                print(
-                    f"[FMP API] Timeout on {url} (Attempt {attempt}/{self.MAX_RETRIES}). Retrying..."
+                self.logger.warning(
+                    "[FMP API] Timeout on %s (Attempt %s/%s). Retrying...",
+                    url,
+                    attempt,
+                    self.MAX_RETRIES,
                 )
                 time.sleep(5 * attempt)
 
             except requests.exceptions.ConnectionError:
-                print("[FMP API] Lost internet connection. Waiting for reconnection...")
-                self._wait_for_internet()  # Block until we get the net back
+                self.logger.warning(
+                    "[FMP API] Lost internet connection. Waiting for reconnection..."
+                )
+                reconnected = self._wait_for_internet()
+                if not reconnected:
+                    self.logger.warning(
+                        "[FMP API] Reconnection timeout reached for this attempt."
+                    )
 
             except requests.exceptions.RequestException as ex:
                 # Catches all other requests-related errors
-                print(
-                    f"[FMP API] Request failed: {ex} (Attempt {attempt}/{self.MAX_RETRIES})"
+                self.logger.warning(
+                    "[FMP API] Request failed: %s (Attempt %s/%s)",
+                    ex,
+                    attempt,
+                    self.MAX_RETRIES,
                 )
                 time.sleep(5 * attempt)
 
-        print(
-            f"[FMP API] Failed to fetch data from {url} after {self.MAX_RETRIES} attempts."
+        self.logger.error(
+            "[FMP API] Failed to fetch data from %s after %s attempts.",
+            url,
+            self.MAX_RETRIES,
         )
         return None  # Fail gracefully
 
@@ -180,7 +236,7 @@ class FMPMarketData:
                     historical_data.append(record)
             return historical_data
 
-        print("[FMP API] No historical data found.")
+        self.logger.info("[FMP API] No historical data found.")
         return None
 
     def get_intraday_data(self, tickers, from_date, to_date, interval):
@@ -209,7 +265,7 @@ class FMPMarketData:
         if isinstance(data, list) and len(data) > 0:
             return data
 
-        print("[FMP API] No intraday data found.")
+        self.logger.info("[FMP API] No intraday data found.")
         return None
 
     def get_realtime_data(self, exchange="NASDAQ"):
@@ -223,16 +279,18 @@ class FMPMarketData:
             list: A list of dictionaries, where each dict contains quote data for a ticker.
                   Returns None if the API call fails.
         """
-        url = "https://financialmodelingprep.com/stable/batch-exchange-quote?"
+        url = "https://financialmodelingprep.com/stable/batch-exchange-quote"
         params = {"exchange": exchange, "short": "false", "apikey": self.fmp_api_key}
 
-        print(f"Fetching batch data for {exchange}...")
+        self.logger.info("Fetching batch data for %s...", exchange)
         data = self._make_request(url, params)
 
         if isinstance(data, list):
             return data
 
-        print(f"[FMP API] Failed to fetch or parse batch data for {exchange}.")
+        self.logger.error(
+            "[FMP API] Failed to fetch or parse batch data for %s.", exchange
+        )
         return None
 
     def get_current_price(self, ticker):
@@ -262,7 +320,7 @@ class FMPMarketData:
             self.logger.error(f"Price fetch failed for {ticker}: {e}")
             return 0.0
 
-    def get_SP500_tickers(self):
+    def get_SP500_tickers(self) -> list[str]:
         """
         Fetches the list of S&P 500 tickers from FMP API.
         Returns a list of ticker symbols.
@@ -275,32 +333,72 @@ class FMPMarketData:
             logging.error("[FMP API] Failed to fetch S&P 500 tickers.")
             return []
 
-        tickers = [item["symbol"] for item in data if "symbol" in item]
-        try:
-            isinstance(tickers, list) and all(isinstance(t, str) for t in tickers)
-        except Exception as e:
-            logging.error(f"[FMP API] Error parsing S&P 500 tickers: {e}")
+        tickers = [
+            item.get("symbol")
+            for item in data
+            if isinstance(item, dict)
+            and isinstance(item.get("symbol"), str)
+            and item.get("symbol").strip()
+        ]
+        if not tickers:
+            logging.error("[FMP API] No valid S&P 500 ticker symbols found.")
             return []
         return tickers
 
-    def get_crypto_tickers(self):
+    def get_crypto_tickers(self) -> list[str]:
         """
-        Fetches the list of top crypto tickers from FMP API.
+        Fetches top crypto tickers using CoinGecko and formats them for FMP.
         Returns a list of ticker symbols.
         """
-        url = "https://financialmodelingprep.com/stable/cryptocurrency-list"
+
+        try:
+            coingecko_data = get_top_crypto_from_coingecko(limit=self.CRYPTO_TOP_LIMIT)
+            reference_rows = load_reference_list()
+            fmp_tickers, _matched_count = format_for_fmp(
+                coingecko_data, reference_rows
+            )
+
+        except Exception as e:
+            logging.error("Error fetching crypto data for formatting: %s", e, exc_info=True)
+            return []
+
+        symbols = []
+        seen = set()
+        for ticker in fmp_tickers:
+            symbol = ticker.get("symbol")
+            if isinstance(symbol, str) and symbol not in seen:
+                seen.add(symbol)
+                symbols.append(symbol)
+
+        if not symbols:
+            logging.error("[FMP API] Error parsing crypto ticker symbols.")
+            return []
+
+        save_crypto_details(fmp_tickers, log_summary=False)
+        return symbols
+
+    def get_commodity_tickers(self) -> list[str]:
+        """
+        Fetches the list of commodity tickers from FMP API.
+        Returns a list of ticker symbols.
+        """
+        url = "https://financialmodelingprep.com/stable/batch-commodity-quotes"
         params = {"apikey": self.fmp_api_key}
 
         data = self._make_request(url, params)
         if not data:
-            logging.error("[FMP API] Failed to fetch crypto tickers.")
+            logging.error("[FMP API] Failed to fetch commodity tickers.")
             return []
 
-        tickers = [item["symbol"] for item in data if "symbol" in item]
-        try:
-            isinstance(tickers, list) and all(isinstance(t, str) for t in tickers)
-        except Exception as e:
-            logging.error(f"[FMP API] Error parsing crypto tickers: {e}")
+        tickers = [
+            item.get("symbol")
+            for item in data
+            if isinstance(item, dict)
+            and isinstance(item.get("symbol"), str)
+            and item.get("symbol").strip()
+        ]
+        if not tickers:
+            logging.error("[FMP API] No valid commodity ticker symbols found.")
             return []
         return tickers
 
@@ -312,3 +410,6 @@ if __name__ == "__main__":
 
     crypto_tickers = fmp.get_crypto_tickers()
     print(f"First 10 Crypto Tickers:\n {crypto_tickers[:10]}")
+
+    commodity_tickers = fmp.get_commodity_tickers()
+    print(f"Commodity Tickers:\n {commodity_tickers[:10]}")

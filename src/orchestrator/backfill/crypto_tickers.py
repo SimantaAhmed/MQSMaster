@@ -1,166 +1,203 @@
-"""
-crypto_tickers.py
------------------
-Fetches top 500 cryptocurrencies by market cap and formats them for FMP API.
-Automatically updates tickers.json with the latest crypto tickers each run.
+"""Fetch top crypto from CoinGecko and output FMP-style records.
 
-Usage:
-    python crypto_tickers.py
+Also supports symbol matching against a provided reference list (like a large FMP
+crypto symbol universe) so your top-500 list aligns with that symbol style.
 """
+import logging
 
-import requests
 import json
 import os
+import re
 import time
+
+import requests
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 TICKERS_JSON_PATH = os.path.join(SCRIPT_DIR, "tickers.json")
 CRYPTO_TICKERS_PATH = os.path.join(SCRIPT_DIR, "crypto_tickers.json")
+TOP_CRYPTO_LIMIT = 500
+REFERENCE_JSON_PATH = os.path.join(SCRIPT_DIR, "reference_crypto.json")
 
 
-def get_top_crypto_from_coingecko(limit=500):
-    """
-    Fetch top cryptocurrencies by market cap from CoinGecko API (free, no key needed).
-    Automatically gets fresh data every time it runs.
-    """
-    print(f"🔄 Fetching top {limit} cryptocurrencies from CoinGecko (live)...")
-    
+def normalize_symbol(symbol: str) -> str:
+    value = (symbol or "").strip().upper()
+    if value.endswith("USD"):
+        value = value[:-3]
+    return re.sub(r"[^A-Z0-9]", "", value)
+
+
+def get_top_crypto_from_coingecko(limit: int = 500) -> list[dict]:
+
     all_coins = []
     per_page = 250
-    pages_needed = (limit // per_page) + 1
-    
+    pages_needed = (limit + per_page - 1) // per_page
+
     for page in range(1, pages_needed + 1):
         url = (
-            f"https://api.coingecko.com/api/v3/coins/markets"
+            "https://api.coingecko.com/api/v3/coins/markets"
             f"?vs_currency=usd&order=market_cap_desc&per_page={per_page}&page={page}"
         )
-        
         try:
-            response = requests.get(url, timeout=30)
+            response = requests.get(url, timeout=10)
             response.raise_for_status()
             coins = response.json()
             all_coins.extend(coins)
-            print(f"  Page {page}: Got {len(coins)} coins")
-            time.sleep(1)  # Rate limit: be nice to free API
-        except Exception as e:
-            print(f"  Error on page {page}: {e}")
+            time.sleep(.2)
+        except Exception as exc:
+            logging.error(f"  Error on page {page}: {exc}")
             break
-    
+
     return all_coins[:limit]
 
 
-def format_for_fmp(coins):
-    """
-    Convert coin symbols to FMP format (e.g., BTC -> BTCUSD).
-    """
-    fmp_tickers = []
-    
-    for coin in coins:
-        symbol = coin.get('symbol', '').upper()
-        name = coin.get('name', '')
-        market_cap = coin.get('market_cap', 0)
-        
-        if symbol and len(symbol) <= 10:  # Skip weird long symbols
-            fmp_tickers.append({
-                "ticker": f"{symbol}USD",
-                "symbol": symbol,
-                "name": name,
-                "market_cap": market_cap
-            })
-    
-    return fmp_tickers
+def load_reference_list() -> list[dict]:
+    if not REFERENCE_JSON_PATH:
+        return []
 
-
-def update_tickers_json(crypto_tickers):
-    """
-    Update the main tickers.json file with crypto tickers.
-    Removes old crypto entries and adds fresh ones.
-    """
-    # Load existing tickers.json
-    if os.path.exists(TICKERS_JSON_PATH):
-        with open(TICKERS_JSON_PATH, 'r') as f:
-            existing_tickers = json.load(f)
-        print(f"📂 Loaded {len(existing_tickers)} existing tickers from tickers.json")
-    else:
-        existing_tickers = []
-        print("📂 No existing tickers.json found, creating new one")
-    
-    # Remove old crypto tickers (anything ending in USD that's crypto)
-    crypto_endings = ['USD']
-    non_crypto_tickers = []
-    removed_count = 0
-    
-    for ticker in existing_tickers:
-        # Keep if it's a stock ticker (doesn't look like crypto)
-        is_crypto = (
-            isinstance(ticker, str) and 
-            ticker.endswith('USD') and 
-            len(ticker) <= 10 and
-            ticker not in ['JPYUSD', 'EURUSD', 'GBPUSD']  # Keep forex if any
+    if not os.path.exists(REFERENCE_JSON_PATH):
+        logging.error(
+            f"No reference file found at {REFERENCE_JSON_PATH}, skipping symbol matching."
         )
-        if not is_crypto:
-            non_crypto_tickers.append(ticker)
-        else:
-            removed_count += 1
-    
-    print(f"🗑️  Removed {removed_count} old crypto tickers")
-    
-    # Add new crypto tickers
-    new_crypto_list = [c["ticker"] for c in crypto_tickers]
-    updated_tickers = non_crypto_tickers + new_crypto_list
-    
-    # Save updated tickers.json
-    with open(TICKERS_JSON_PATH, 'w') as f:
-        json.dump(updated_tickers, f, indent=4)
-    
-    print(f"✅ Updated tickers.json: {len(non_crypto_tickers)} stocks + {len(new_crypto_list)} crypto = {len(updated_tickers)} total")
-    
-    return updated_tickers
+        return []
+
+    try:
+        with open(REFERENCE_JSON_PATH, "r") as handle:
+            data = json.load(handle)
+            if isinstance(data, list):
+                return data
+    except Exception as exc:
+        logging.warning(f"Failed to read reference file: {exc}")
+    return []
 
 
-def save_crypto_details(crypto_tickers):
-    """
-    Save detailed crypto info to separate file for reference.
-    """
-    with open(CRYPTO_TICKERS_PATH, 'w') as f:
-        json.dump(crypto_tickers, f, indent=4)
-    
-    print(f"📝 Saved detailed crypto info to crypto_tickers.json")
+def build_reference_index(reference_rows: list[dict]) -> tuple[dict, dict]:
+    by_exact_symbol = {}
+    by_base = {}
+
+    for row in reference_rows:
+        symbol = (row.get("symbol") or "").strip().upper()
+        if not symbol:
+            continue
+
+        by_exact_symbol[symbol] = row
+        base = normalize_symbol(symbol)
+        by_base.setdefault(base, []).append(row)
+
+    return by_exact_symbol, by_base
 
 
-def main():
+def pick_reference_symbol(
+    base: str, by_exact_symbol: dict, by_base: dict
+) -> str | None:
+    exact_usd = f"{base}USD"
+    if exact_usd in by_exact_symbol:
+        return by_exact_symbol[exact_usd]["symbol"].upper()
+    if base in by_exact_symbol:
+        return by_exact_symbol[base]["symbol"].upper()
+
+    matches = by_base.get(base, [])
+    if not matches:
+        return None
+
+    for row in matches:
+        symbol = (row.get("symbol") or "").upper()
+        if symbol.endswith("USD"):
+            return symbol
+
+    return (matches[0].get("symbol") or "").upper() or None
+
+
+def format_for_fmp(
+    coins: list[dict], reference_rows: list[dict] | None = None
+) -> tuple[list[dict], int]:
+    fmp_tickers = []
+    matched_count = 0
+
+    by_exact_symbol, by_base = build_reference_index(reference_rows or [])
+
+    for coin in coins:
+        raw_symbol = (coin.get("symbol") or "").strip().upper()
+        if not raw_symbol:
+            continue
+
+        base = normalize_symbol(raw_symbol)
+        if not base:
+            continue
+
+        matched_symbol = pick_reference_symbol(base, by_exact_symbol, by_base)
+        final_symbol = matched_symbol or f"{base}USD"
+        if matched_symbol:
+            matched_count += 1
+
+        fmp_tickers.append(
+            {
+                "symbol": final_symbol,
+                "price": coin.get("current_price"),
+                "change": coin.get("price_change_24h") or 0,
+                "volume": coin.get("total_volume"),
+            }
+        )
+
+    return fmp_tickers, matched_count
+
+
+def save_crypto_details(crypto_tickers: list[dict], log_summary: bool = True) -> None:
+    symbols = []
+    for ticker in crypto_tickers:
+        symbol = ticker.get("symbol") if isinstance(ticker, dict) else None
+        if isinstance(symbol, str) and symbol.strip():
+            symbols.append(symbol)
+
+    original_count = len(symbols)
+    seen = set()
+    deduped_symbols = []
+    for symbol in symbols:
+        if symbol in seen:
+            continue
+        seen.add(symbol)
+        deduped_symbols.append(symbol)
+
+    duplicate_count = original_count - len(deduped_symbols)
+
+    with open(CRYPTO_TICKERS_PATH, "w") as handle:
+        json.dump(deduped_symbols, handle, indent=2)
+    if log_summary:
+        logging.info(
+            "Saved %s entries to crypto_tickers.json (duplicate_count=%s)",
+            len(deduped_symbols),
+            duplicate_count,
+        )
+
+
+def main() -> None:
     print("=" * 60)
     print("🚀 CRYPTO TICKERS UPDATER")
     print("=" * 60)
-    print("This script fetches live data and updates tickers.json")
-    print()
-    
-    # Step 1: Fetch top 500 crypto (live data)
-    coins = get_top_crypto_from_coingecko(500)
-    
+
+    coins = get_top_crypto_from_coingecko(TOP_CRYPTO_LIMIT)
     if not coins:
         print("❌ Failed to fetch crypto data")
         return
-    
-    print(f"\n✅ Fetched {len(coins)} cryptocurrencies")
-    
-    # Step 2: Format for FMP
-    fmp_tickers = format_for_fmp(coins)
+
+    print(f"✅ Fetched {len(coins)} cryptocurrencies")
+
+    reference_rows = load_reference_list()
+    fmp_tickers, matched_count = format_for_fmp(coins, reference_rows)
+
     print(f"✅ Formatted {len(fmp_tickers)} tickers for FMP")
-    
-    # Step 3: Save detailed crypto info
+    if reference_rows:
+        print(
+            f"🔗 Matched {matched_count}/{len(fmp_tickers)} symbols to reference list style"
+        )
+
     save_crypto_details(fmp_tickers)
-    
-    # Step 4: Update main tickers.json
-    update_tickers_json(fmp_tickers)
-    
-    # Step 5: Print preview
+
     print("\n" + "=" * 60)
-    print("📋 TOP 20 CRYPTO TICKERS (by market cap):")
+    print("📋 TOP 20 CRYPTO TICKERS:")
     print("=" * 60)
-    for i, coin in enumerate(fmp_tickers[:20], 1):
-        print(f"  {i:2}. {coin['ticker']:12} - {coin['name']}")
-    
+    for index, coin in enumerate(fmp_tickers[:20], 1):
+        print(f"  {index:2}. {coin['symbol']:18} price={coin['price']}")
+
     print("\n✅ Done! Run this script anytime to refresh crypto list.")
 
 
