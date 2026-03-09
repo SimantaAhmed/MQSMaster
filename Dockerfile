@@ -1,5 +1,5 @@
-# Base image with Python 3.12
-FROM python:3.12-slim
+# Base image aligned with CI Python version
+FROM python:3.11-slim
 
 # Keep Python logs unbuffered and avoid .pyc files
 ENV PYTHONDONTWRITEBYTECODE=1 \

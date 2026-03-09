@@ -14,12 +14,8 @@ description = "A quantitative trading bot."
 where = ["src"]
 
 [tool.coverage.run]
-source = ["."]
+source = ["src"]
 omit = [
-  "MQS/*",
-  "*/.venv/*",
-  "*/site-packages/*",
+  "src/mqs_bot.egg-info/*",
   "*/__pycache__/*",
-  "*/build/*",
-  "*/dist/*",
 ]

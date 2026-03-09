@@ -57,7 +57,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --no-cache-dir --only-binary :all: -r requirements.txt
           python -m pip install -e .
-          python -m pip install ruff pytest pytest-cov
+          python -m pip install ruff pytest pytest-cov pip-audit
     
       # Lint (fast checks)
       - name: Lint (ruff)
@@ -81,13 +81,32 @@ jobs:
             echo "available=false" >> $GITHUB_OUTPUT
           fi
 
+      # Gate API tests on FMP API key
+      - name: Check FMP API key
+        id: fmp
+        env:
+          FMP_API_KEY: ${{ secrets.FMP_API_KEY }}
+        run: |
+          if [ -n "$FMP_API_KEY" ]; then
+            echo "available=true" >> $GITHUB_OUTPUT
+          else
+            echo "available=false" >> $GITHUB_OUTPUT
+          fi
+
+      # Security scan for Python dependencies.
+      # Non-blocking initially to avoid breaking pipelines while triaging findings.
+      - name: Security scan (pip-audit)
+        continue-on-error: true
+        run: |
+          python -m pip_audit -r requirements.txt
+
       # Run unit tests (always)
       - name: Run unit tests
         env:
           PYTHONWARNINGS: error
         run: |
-          python -m pytest -q -m "not db" \
-            --cov=. \
+          python -m pytest -q -m "not db and not api" \
+            --cov=src \
             --cov-report=term-missing \
             --cov-report=json
 
@@ -104,7 +123,20 @@ jobs:
           PYTHONWARNINGS: error
         run: |
           python -m pytest -q -m "db" \
-            --cov=. \
+            --cov=src \
+            --cov-append \
+            --cov-report=term-missing \
+            --cov-report=json
+
+      # Run API integration tests if key exists
+      - name: Run API integration tests
+        if: steps.fmp.outputs.available == 'true'
+        env:
+          FMP_API_KEY: ${{ secrets.FMP_API_KEY }}
+          PYTHONWARNINGS: error
+        run: |
+          python -m pytest -q -m "api" \
+            --cov=src \
             --cov-append \
             --cov-report=term-missing \
             --cov-report=json
@@ -112,6 +144,14 @@ jobs:
       - name: Enforce per-file coverage
         run: |
           python scripts/check_per_file_coverage.py --min 50 --coverage-file coverage.json
+
+      - name: Upload coverage artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-json
+          path: coverage.json
+          if-no-files-found: warn
 
 
 
@@ -177,6 +217,17 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+      - name: Trigger deployment webhook
+        # Optional deployment hook. Configure DEPLOY_WEBHOOK_URL secret to enable.
+        if: steps.dockerfile.outputs.exists == 'true' && secrets.DEPLOY_WEBHOOK_URL != ''
+        env:
+          DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
+          IMAGE: ghcr.io/${{ github.repository }}:${{ github.sha }}
+        run: |
+          curl -fsSL -X POST "$DEPLOY_WEBHOOK_URL" \
+            -H "Content-Type: application/json" \
+            -d "{\"repository\":\"${{ github.repository }}\",\"sha\":\"${{ github.sha }}\",\"image\":\"$IMAGE\"}"
 
       - name: Skip publish (no Dockerfile)
         # Explain why CD didn't run.

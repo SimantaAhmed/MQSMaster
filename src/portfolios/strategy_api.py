@@ -90,7 +90,6 @@ class AssetData:
             except Exception:
                 return pd.DataFrame()
 
-
         try:
             start_date = end_date - pd.to_timedelta(lookback_period)
         except Exception:

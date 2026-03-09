@@ -76,7 +76,7 @@ class TestAssetData:
         current_time = pd.Timestamp('2024-01-10', tz='America/New_York')
         asset = AssetData('AAPL', sample_data, current_time)
         
-        history = asset.History('3d')
+        history = asset.History('3D')
         
         assert len(history) == 4
         assert history['close_price'].iloc[-1] == 109.5
@@ -84,7 +84,7 @@ class TestAssetData:
     def test_history_with_none_time(self, sample_data):
         """Test History method when current_time is None"""
         asset = AssetData('AAPL', sample_data, None)
-        history = asset.History('5d')
+        history = asset.History('5D')
         
         assert len(history) == 6
         assert history['close_price'].iloc[-1] == 109.5
@@ -93,7 +93,7 @@ class TestAssetData:
         """Test History method with empty DataFrame"""
         empty_df = pd.DataFrame()
         asset = AssetData('AAPL', empty_df, None)
-        history = asset.History('5d')
+        history = asset.History('5D')
         
         assert history.empty
     

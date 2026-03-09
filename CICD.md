@@ -380,3 +380,9 @@ If you're tackling this incrementally, here's the order that gives the most prot
 The CI pipeline in `main.yml` has a solid structure (lint → unit tests → DB tests → coverage → Docker build/push), but the test suite behind it is thin. Most of the codebase's critical paths — trade execution, indicator calculations, strategy signal logic, data pipelines — have no unit tests. The CI currently gates on coverage percentage, but that's meaningless if the tests themselves don't exercise the important code paths.
 
 The highest-impact change is writing Tier 1 unit tests for the `BacktestExecutor`, all indicators, and all strategy `OnData` methods. These require no secrets, no DB, no API keys — they run everywhere, fast, and catch the bugs that actually cost money.
+
+
+Not yet implemented from list
+
+Matrix testing across multiple Python versions (left out intentionally to avoid changing current stable runtime assumptions).
+Pinning actions to commit SHAs (needs curated SHA set and maintenance policy).
