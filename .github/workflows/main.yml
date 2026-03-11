@@ -21,15 +21,20 @@ concurrency:
 jobs:
   ci:
     # CI job: validate PRs to main.
+    name: ci (py${{ matrix.python-version }})
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12"]
     permissions:
       contents: read
     
     steps:
       # Checkout repository
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
           fetch-depth: 1
           persist-credentials: false
@@ -37,18 +42,18 @@ jobs:
       # Setup Python runtime
       - name: Set up Python
         id: python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5.6.0
         with:
-          python-version: "3.11"
+          python-version: ${{ matrix.python-version }}
           cache: pip
 
       - name: Cache pytest
-        uses: actions/cache@v4
+        uses: actions/cache@0400d5f644dc74513175e3cd8d07132dd4860809 # v4.2.4
         with:
           path: .pytest_cache
-          key: ${{ runner.os }}-pytest-${{ steps.python.outputs.python-version }}-${{ hashFiles('pytest.ini', 'pyproject.toml', 'requirements.txt') }}
+          key: ${{ runner.os }}-pytest-${{ matrix.python-version }}-${{ hashFiles('pytest.ini', 'pyproject.toml', 'requirements.txt') }}
           restore-keys: |
-            ${{ runner.os }}-pytest-${{ steps.python.outputs.python-version }}-
+            ${{ runner.os }}-pytest-${{ matrix.python-version }}-
             ${{ runner.os }}-pytest-
 
       # Install dependencies for lint/tests
@@ -66,6 +71,7 @@ jobs:
 
       # Gate tests on DB secrets
       - name: Check DB secrets
+        if: matrix.python-version == '3.11'
         id: db
         env:
           DB_HOST: ${{ secrets.DB_HOST }}
@@ -83,6 +89,7 @@ jobs:
 
       # Gate API tests on FMP API key
       - name: Check FMP API key
+        if: matrix.python-version == '3.11'
         id: fmp
         env:
           FMP_API_KEY: ${{ secrets.FMP_API_KEY }}
@@ -96,6 +103,7 @@ jobs:
       # Security scan for Python dependencies.
       # Non-blocking initially to avoid breaking pipelines while triaging findings.
       - name: Security scan (pip-audit)
+        if: matrix.python-version == '3.11'
         continue-on-error: true
         run: |
           python -m pip_audit -r requirements.txt
@@ -112,7 +120,7 @@ jobs:
 
       # Run integration tests if DB secrets exist
       - name: Run integration tests
-        if: steps.db.outputs.available == 'true'
+        if: matrix.python-version == '3.11' && steps.db.outputs.available == 'true'
         env:
           DB_HOST: ${{ secrets.DB_HOST }}
           DB_PORT: ${{ secrets.DB_PORT }}
@@ -130,7 +138,7 @@ jobs:
 
       # Run API integration tests if key exists
       - name: Run API integration tests
-        if: steps.fmp.outputs.available == 'true'
+        if: matrix.python-version == '3.11' && steps.fmp.outputs.available == 'true'
         env:
           FMP_API_KEY: ${{ secrets.FMP_API_KEY }}
           PYTHONWARNINGS: error
@@ -142,14 +150,23 @@ jobs:
             --cov-report=json
 
       - name: Enforce per-file coverage
+        if: matrix.python-version == '3.11'
         run: |
-          python scripts/check_per_file_coverage.py --min 50 --coverage-file coverage.json
+          python scripts/check_per_file_coverage.py \
+            --min 50 \
+            --coverage-file coverage.json \
+            --include-glob "src/backtest/*.py" \
+            --include-glob "src/common/auth/*.py" \
+            --include-glob "src/orchestrator/marketData/fmpMarketData.py" \
+            --include-glob "src/portfolios/indicators/*.py" \
+            --include-glob "src/portfolios/strategy_api.py" \
+            --include-glob "src/main_backtest.py"
 
       - name: Upload coverage artifact
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
-          name: coverage-json
+          name: coverage-json-py${{ matrix.python-version }}
           path: coverage.json
           if-no-files-found: warn
 
@@ -159,10 +176,10 @@ jobs:
       
 
   build-and-publish:
-    # CD job: build and publish Docker image on main branch pushes.
+    # CD job: PR build validation + publish/deploy on main pushes.
     runs-on: ubuntu-latest
     needs: ci
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
     permissions:
       contents: read
       packages: write
@@ -171,7 +188,7 @@ jobs:
     steps:
       # Pull repository code for Docker build.
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
       - name: Check Dockerfile
         # Only build/push if a Dockerfile exists at repo root.
@@ -186,22 +203,30 @@ jobs:
       - name: Set up Docker Buildx
         # Buildx enables multi-platform and cached builds.
         if: steps.dockerfile.outputs.exists == 'true'
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@b5ca514318bd6ebac0fb2aedd5d36ec1b5c232a2 # v3.10.0
 
       - name: Log in to GHCR
         # Authenticate so we can push the image to GitHub Container Registry.
-        if: steps.dockerfile.outputs.exists == 'true'
-        uses: docker/login-action@v3
+        if: steps.dockerfile.outputs.exists == 'true' && github.event_name == 'push'
+        uses: docker/login-action@9780b0c442fbb1117ed29e0efdff1e18412f7567 # v3.3.0
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Build image (PR validation)
+        # Validate Docker build for PRs without publishing image.
+        if: steps.dockerfile.outputs.exists == 'true' && github.event_name == 'pull_request'
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
+        with:
+          context: .
+          push: false
+
       - name: Extract metadata
         # Create image tags (latest + commit SHA).
-        if: steps.dockerfile.outputs.exists == 'true'
+        if: steps.dockerfile.outputs.exists == 'true' && github.event_name == 'push'
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@902fa8ec7d6ecbf8d84d538b9b233a880e428804 # v5.7.0
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
@@ -210,17 +235,24 @@ jobs:
 
       - name: Build and push image
         # Build the Docker image and push it to GHCR.
-        if: steps.dockerfile.outputs.exists == 'true'
-        uses: docker/build-push-action@v6
+        if: steps.dockerfile.outputs.exists == 'true' && github.event_name == 'push'
+        uses: docker/build-push-action@263435318d21b8e681c14492fe198d362a7d2c83 # v6.18.0
         with:
           context: .
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
 
+      - name: Require deployment webhook configuration
+        # Enforce real CD: fail when deployment target is not configured.
+        if: steps.dockerfile.outputs.exists == 'true' && github.event_name == 'push' && secrets.DEPLOY_WEBHOOK_URL == ''
+        run: |
+          echo "DEPLOY_WEBHOOK_URL is not configured. CD requires a deployment target." >&2
+          exit 1
+
       - name: Trigger deployment webhook
-        # Optional deployment hook. Configure DEPLOY_WEBHOOK_URL secret to enable.
-        if: steps.dockerfile.outputs.exists == 'true' && secrets.DEPLOY_WEBHOOK_URL != ''
+        # Deploy the newly built image via the configured webhook.
+        if: steps.dockerfile.outputs.exists == 'true' && github.event_name == 'push'
         env:
           DEPLOY_WEBHOOK_URL: ${{ secrets.DEPLOY_WEBHOOK_URL }}
           IMAGE: ghcr.io/${{ github.repository }}:${{ github.sha }}

@@ -20,7 +20,36 @@ def parse_args() -> argparse.Namespace:
         default=50.0,
         help="Minimum per-file coverage percentage.",
     )
+    parser.add_argument(
+        "--include-glob",
+        action="append",
+        default=[],
+        help=(
+            "Glob pattern(s) to include in per-file gate. "
+            "If omitted, all files in coverage.json are considered."
+        ),
+    )
+    parser.add_argument(
+        "--exclude-glob",
+        action="append",
+        default=[],
+        help="Glob pattern(s) to exclude from per-file gate.",
+    )
     return parser.parse_args()
+
+
+def is_selected(file_path: str, includes: list[str], excludes: list[str]) -> bool:
+    path_obj = Path(file_path)
+
+    if includes:
+        include_match = any(path_obj.match(pattern) for pattern in includes)
+        if not include_match:
+            return False
+
+    if excludes and any(path_obj.match(pattern) for pattern in excludes):
+        return False
+
+    return True
 
 
 def main() -> int:
@@ -37,14 +66,24 @@ def main() -> int:
         return 2
 
     failures = []
+    selected_count = 0
     for file_path, info in files.items():
+        if not is_selected(file_path, args.include_glob, args.exclude_glob):
+            continue
+
         summary = info.get("summary", {})
         num_statements = summary.get("num_statements", 0)
         percent_covered = summary.get("percent_covered")
         if num_statements == 0 or percent_covered is None:
             continue
+
+        selected_count += 1
         if percent_covered < args.min:
             failures.append((file_path, percent_covered, num_statements))
+
+    if selected_count == 0:
+        print("No files matched the configured include/exclude filters.")
+        return 2
 
     if failures:
         failures.sort(key=lambda item: item[1])
@@ -57,7 +96,10 @@ def main() -> int:
         print(f"Minimum required: {args.min:.2f}%")
         return 1
 
-    print(f"All files meet per-file coverage >= {args.min:.2f}%")
+    print(
+        f"All selected files ({selected_count}) meet per-file coverage >= "
+        f"{args.min:.2f}%"
+    )
     return 0
 
 
