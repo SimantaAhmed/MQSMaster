@@ -7,6 +7,7 @@ This repository provides the foundation for a multi-portfolio trading bot and a 
 ## Table of Contents
 
 - [Installation](#installation)
+- [Backtest Modes](#backtest-modes)
 
 ---
 
@@ -72,3 +73,44 @@ If you see something like the following lines, congratulations, you have success
 
 2025-09-20 16:54:37,793 INFO: Database connection pool created successfully.
 ✅ PostgreSQL connection successful! Current DB Time: 2025-09-20 15:24:37.975847-04:00
+
+---
+
+# Backtest Modes
+
+The backtest entrypoint now supports two modes through `src.main_backtest.main(...)`:
+
+- `backtest_mode="event"` (default): existing event-driven backtest engine.
+- `backtest_mode="fast"`: vectorized quick-test mode for faster iteration.
+
+## Fast Mode Example
+
+`fast_years_back` in `main(...)` adds a warm-up lookback window for fetching historical/training data in fast mode and does not override the explicit `start_date` / `end_date` backtest output window.
+
+```python
+from src.main_backtest import main
+from src.portfolios.portfolio_1.strategy import VolMomentum
+
+main(
+	portfolio_classes=[VolMomentum],
+	start_date="2025-01-01",
+	end_date="2025-03-31",
+	initial_capital=1_000_000,
+	slippage=0.0,
+	backtest_mode="fast",
+	fast_years_back=3,
+	fast_benchmark_label="SPY",
+)
+```
+
+## Fast Mode Outputs
+
+Fast mode writes artifacts into `src/backtest/data/<timestamp>_backtest_<portfolio_id>/` including:
+
+- `performance_timeseries_absolute.csv`
+- `benchmark_buy_and_hold_performance.csv`
+- `summary_metrics.csv`
+- `seasonal_metrics.csv`
+- `overlay_return_paths.csv`
+
+`overlay_return_paths.csv` is automatically detected by `src/visualize_backtests.ipynb` for the multi-year same-window overlay chart.

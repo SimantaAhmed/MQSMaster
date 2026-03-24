@@ -80,7 +80,7 @@ class CrossoverRmiStrategy(BasePortfolio):
 
             # --- 3. Showcase History and the .toolkit accessor ---
             # Fetch history to calculate volatility
-            history = asset.History("30D")
+            history = asset.History("30d")
             returns = history["close_price"].pct_change().dropna()
 
             # Use the toolkit to remove outliers before calculating volatility

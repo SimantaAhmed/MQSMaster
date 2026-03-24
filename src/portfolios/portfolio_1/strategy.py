@@ -58,7 +58,7 @@ class VolMomentum(BasePortfolio):
             if not all([asset.Exists, roc.IsReady]):
                 continue
 
-            return_history = asset.History("60D")
+            return_history = asset.History("60d")
             returns = return_history["close_price"].pct_change(60).dropna()
             volatility = returns.std() * (252**0.5)
 

@@ -1,11 +1,11 @@
 import logging
 
 try:
-    from common.database.MQSDBConnector import MQSDBConnector
+    from common.database.MQSDBConnector import (
+        MQSDBConnector,
+    )  # ty:ignore[unresolved-import]
 except ImportError:
-    logging.warning(
-        "MQSDBConnector relative import failed; using absolute import."
-    )
+    logging.warning("MQSDBConnector relative import failed; using absolute import.")
     from src.common.database.MQSDBConnector import MQSDBConnector
 
 
@@ -48,6 +48,7 @@ class SchemaDefinitions:
             low_price NUMERIC,
             close_price NUMERIC,
             volume BIGINT,
+            avg_sentiment NUMERIC,
             created_at TIMESTAMP DEFAULT NOW()
         );
         """
@@ -131,6 +132,29 @@ class SchemaDefinitions:
             UNIQUE (portfolio_id, ticker, date, model) -- Ensures one weight per asset, per portfolio, per day, per model
             );
         """
+        create_news_sentiment_table = """
+            CREATE TABLE news_sentiment (
+            id SERIAL PRIMARY KEY,
+            ticker VARCHAR(10),
+            article_url TEXT,
+            published_at TIMESTAMP,
+            sentiment_score FLOAT, -- Range: -1.0 to 1.0
+            content_summary TEXT
+            );
+
+        """
+
+        create_news_sentiment_table = """
+        CREATE TABLE IF NOT EXISTS news_sentiment (
+            id SERIAL PRIMARY KEY,
+            ticker VARCHAR(10),
+            article_url TEXT,
+            published_at TIMESTAMP,
+            sentiment_score FLOAT,
+            content_summary TEXT,
+            created_at TIMESTAMP DEFAULT NOW()
+        );
+        """
 
         statements = [
             create_user_creds_table,
@@ -141,6 +165,7 @@ class SchemaDefinitions:
             create_cash_equity_book_table,
             create_positions_table,
             create_port_weights_table,
+            create_news_sentiment_table,
         ]
 
         for stmt in statements:

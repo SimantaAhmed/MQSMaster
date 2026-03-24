@@ -13,17 +13,28 @@ proj_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 if proj_root not in sys.path:
     sys.path.insert(0, proj_root)
 
-from src.common.auth.apiAuth import APIAuth
+from src.common.articles_gateway import ArticlesGateway
+
+gateway = ArticlesGateway()
 
 # ─── CONFIG ───────────────────────────────────────────────────────────────────
-api = APIAuth()
-API_KEY = api.get_fmp_api_key()  # ← CALL the method!
 MAX_PAGES_PER_RUN = 50  # Max pages to fetch in a single cycle
 RATE_LIMIT = 0.2  # Seconds to wait between API calls
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 OUTPUT_DIR = os.path.join(BASE_DIR, "articles")
 STATE_DIR = os.path.join(BASE_DIR, "fetch_state")
+
+
+def normalize_published_date(df):
+    """Coerce publishedDate to pandas datetime and drop invalid rows."""
+    if df is None or df.empty or "publishedDate" not in df.columns:
+        return df
+
+    out = df.copy()
+    out["publishedDate"] = pd.to_datetime(out["publishedDate"], errors="coerce")
+    out = out.dropna(subset=["publishedDate"])
+    return out
 
 
 # ─── ARGPARSE TO PICK UP COMMAND‐LINE ARGUMENTS ───────────────────────────────
@@ -34,11 +45,17 @@ def parse_args():
     )
     p.add_argument("ticker", help="The ticker symbol to fetch (e.g., AAPL).")
     p.add_argument(
-        "start_date", help="Start date for fetching articles, in YYYY-MM-DD format."
-    )
+        "start_date",
+        help="Start date for fetching articles, in YYYY-MM-DD format.")
     p.add_argument(
-        "end_date", help="End date for fetching articles, in YYYY-MM-DD format."
-    )
+        "end_date",
+        help="End date for fetching articles, in YYYY-MM-DD format.")
+    p.add_argument("--trump_tracker",
+                   help="Include Trump truth social post?(True/False)",
+                   type=bool,
+                   default=False,
+                   required=False
+                )
     return p.parse_args()
 
 
@@ -56,17 +73,12 @@ def fetch_news(symbol, start_date, end_date, start_page=0):
     reached_start_date = False
 
     while page < start_page + MAX_PAGES_PER_RUN:
-        url = (
-            f"https://financialmodelingprep.com/api/v3/stock_news"
-            f"?tickers={symbol}&page={page}&apikey={API_KEY}"
-        )
         try:
-            resp = requests.get(url, timeout=15)
-            resp.raise_for_status()
-            news = resp.json()
+            news = gateway.fetch_fmp_news(symbol, page)
         except requests.RequestException as e:
             print(f"[{symbol}] Request error on page {page}: {e}")
             break
+
 
         if not news:
             print(f"[{symbol}] No more articles found from API.")
@@ -188,16 +200,19 @@ def update_ticker_csv(symbol, start_date_str, end_date_str):
 
         # Update CSV if we found articles
         if articles:
-            new_df = pd.DataFrame(articles)
+            new_df = normalize_published_date(pd.DataFrame(articles))
 
             if os.path.exists(csv_path):
                 try:
                     old_df = pd.read_csv(csv_path, parse_dates=["publishedDate"])
+                    old_df = normalize_published_date(old_df)
                     combined = pd.concat([old_df, new_df], ignore_index=True)
                 except pd.errors.EmptyDataError:
                     combined = new_df
             else:
                 combined = new_df
+
+            combined = normalize_published_date(combined)
 
             # Remove duplicates and sort
             initial_count = len(combined)
@@ -227,7 +242,9 @@ def update_ticker_csv(symbol, start_date_str, end_date_str):
 
 def remove_duplicates(*kwargs):
     """Remove duplicates based on title and publishedDate."""
-    combined = pd.concat([*kwargs], ignore_index=True)
+    normalized = [normalize_published_date(df) for df in kwargs if df is not None]
+    combined = pd.concat(normalized, ignore_index=True)
+    combined = normalize_published_date(combined)
     before_dedup = len(combined)
     combined.drop_duplicates(
         subset=["publishedDate", "title"], keep="first", inplace=True
@@ -238,30 +255,60 @@ def remove_duplicates(*kwargs):
     )
     return combined
 
-def temp_save_articles(args, yahoo_news_df, finviz_news_df, alpha_news_df):
-    """Save temporary article CSVs for duplicate checking."""
+def merge_all_sources(args, yahoo_news_df, finviz_news_df, alpha_news_df, tmnt_news_df):
+    """Merge all article sources into a single CSV file per ticker."""
     path = os.path.dirname(__file__) + "/articles"
-    # Write temporary files for duplicate checking
-
-    yahoo_path = f"{path}/{args.ticker.upper()}_yahoo_news.csv"
-    finviz_path = f"{path}/{args.ticker.upper()}_finviz_news.csv"
-    alpha_path = f"{path}/{args.ticker.upper()}_alpha_news.csv"
     fmp_path = f"{path}/{args.ticker.upper()}.csv"
-
-    with open(yahoo_path, "w", encoding="utf-8") as f:
-        yahoo_news_df.to_csv(f, index=False, date_format="%Y-%m-%d %H:%M:%S")
-    with open(finviz_path, "w", encoding="utf-8") as f:
-        finviz_news_df.to_csv(f, index=False, date_format="%Y-%m-%d %H:%M:%S")
-    with open(alpha_path, "w", encoding="utf-8") as f:
-        alpha_news_df.to_csv(f, index=False, date_format="%Y-%m-%d %H:%M:%S")
-    return fmp_path, yahoo_path, finviz_path, alpha_path
+    
+    # Load existing FMP data if it exists
+    try:
+        fmp_df = pd.read_csv(fmp_path, parse_dates=["publishedDate"])
+        fmp_df = normalize_published_date(fmp_df)
+        print(f"Loaded existing FMP data: {len(fmp_df)} articles")
+    except FileNotFoundError:
+        print(f"No existing FMP data found for {args.ticker.upper()}")
+        fmp_df = pd.DataFrame()
+    
+    # Combine all sources
+    all_dataframes = []
+    
+    if not fmp_df.empty:
+        all_dataframes.append(fmp_df)
+        print(f"FMP articles: {len(fmp_df)}")
+    
+    if not yahoo_news_df.empty:
+        all_dataframes.append(yahoo_news_df)
+        print(f"Yahoo articles: {len(yahoo_news_df)}")
+    
+    if not finviz_news_df.empty:
+        all_dataframes.append(finviz_news_df)
+        print(f"Finviz articles: {len(finviz_news_df)}")
+    
+    if not alpha_news_df.empty:
+        all_dataframes.append(alpha_news_df)
+        print(f"Alpha Vantage articles: {len(alpha_news_df)}")
+    if not tmnt_news_df.empty and args.trump_tracker:
+        all_dataframes.append(tmnt_news_df)
+        print(f"Trump Tracker articles: {len(tmnt_news_df)}")
+    if not all_dataframes:
+        print(f"No articles found for {args.ticker.upper()}")
+        return fmp_path
+    
+    # Merge all sources
+    combined_df = remove_duplicates(*all_dataframes)
+    
+    # Save the merged file
+    combined_df.to_csv(fmp_path, index=False, date_format="%Y-%m-%d %H:%M:%S")
+    print(f"Saved merged articles to {fmp_path}: {len(combined_df)} total articles")
+    
+    return fmp_path
 
 def main():
     """Main function to parse arguments and initiate the fetch."""
     args = parse_args()
     update_ticker_csv(args.ticker.upper(), args.start_date, args.end_date)
 
-    from .fetch_alt_articles import ArticleScraper
+    from NLP.fetch_alt_articles import ArticleScraper
 
     scraper = ArticleScraper(args.ticker.upper())
     # Alpha Vantage expects format YYYYMMDDTHHmm (no seconds)
@@ -276,31 +323,20 @@ def main():
     alpha = scraper.scrape_alpha(
         ticker=[args.ticker.upper()], time_from=start, time_to=end
     )
+    tmnt = scraper.trump_tracker()
     print("--------------------\n")
-    print(f"Fetching more articles for {args.ticker.upper()}.")
-    path = os.path.dirname(__file__) + "/articles"
+    print(f"Fetching additional articles for {args.ticker.upper()}.")
+
     # Convert to DataFrame for further analysis if needed
     yahoo_news_df = pd.DataFrame(yahoo)
     finviz_news_df = pd.DataFrame(finviz)
     alpha_news_df = pd.DataFrame(alpha)
-
-    # Save temporary CSVs
-    fmp_path, yahoo_path, finviz_path, alpha_path = temp_save_articles(args, yahoo_news_df, finviz_news_df, alpha_news_df)
-    fmp_df = pd.read_csv(fmp_path)
-    # Check for duplicates across sources
-    scraper.check_duplicates()
-    combined_df = remove_duplicates(fmp_df, yahoo_news_df, finviz_news_df, alpha_news_df)
-    combined_df.to_csv(
-        f"{path}/{args.ticker.upper()}.csv",
-        index=False,
-        date_format="%Y-%m-%d %H:%M:%S",
-    )
-
-    # Clean up temporary files
-    os.remove(yahoo_path)
-    os.remove(finviz_path)
-    os.remove(alpha_path)
-    print(f"Cleaned up temporary files for {args.ticker.upper()}")
+    tmnt_news_df = pd.DataFrame(tmnt)
+    # Merge all sources into single file
+    final_path = merge_all_sources(args, yahoo_news_df, finviz_news_df, alpha_news_df, tmnt_news_df)
+    #Trump tracker is skipped on default until we decide how to handle it in the pipeline, so we can ignore the fact that it is not being merged in the default case
+    print(f"All articles merged into single file: {final_path}")
+    print(f"Processing completed for {args.ticker.upper()}")
 
 
 if __name__ == "__main__":

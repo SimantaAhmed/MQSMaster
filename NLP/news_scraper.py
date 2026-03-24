@@ -68,7 +68,7 @@ def scrape_article_content(symbol, max_scrolls=10):
     # Configure Chrome to be stable for scraping.
     chrome_options = Options()
     # Uncomment to run headless (no window) if desired.
-    chrome_options.add_argument("--headless=new")
+    #chrome_options.add_argument("--headless=new")
     chrome_options.add_argument("--disable-blink-features=AutomationControlled")
     chrome_options.add_argument("--no-sandbox")
     chrome_options.add_argument("--disable-dev-shm-usage")

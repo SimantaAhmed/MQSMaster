@@ -1,0 +1,564 @@
+2026-02-01 23:08:37,243 - INFO - Starting NLP scraper daemon with batched processing...
+2026-02-01 23:08:37,243 - INFO - Batch 1: ['AAPL', 'MSFT', 'GOOGL']
+2026-02-01 23:08:37,243 - INFO - Batch 2: ['AMZN', 'TSLA']
+2026-02-01 23:08:37,243 - INFO - Batch 3: ['NVDA', 'AMD']
+2026-02-01 23:08:37,243 - INFO - Interval: Every 300 seconds
+2026-02-01 23:08:37,243 - INFO - Batch delay: 120 seconds between batches
+2026-02-01 23:08:37,243 - INFO - === Starting new scraping cycle ===
+2026-02-01 23:08:37,244 - INFO - Starting batch 1 with tickers: ['AAPL', 'MSFT', 'GOOGL']
+2026-02-01 23:08:37,244 - INFO - Processing ticker: AAPL
+2026-02-01 23:08:37,244 - INFO - Step 1: Fetching articles for AAPL
+2026-02-01 23:08:58,112 - INFO - Successfully fetched articles for AAPL
+2026-02-01 23:08:58,114 - INFO - Step 2: Processing sentiment and updating database for AAPL
+2026-02-01 23:09:39,373 - INFO - Successfully processed sentiment and updated database for AAPL
+2026-02-01 23:09:49,373 - INFO - Processing ticker: MSFT
+2026-02-01 23:09:49,373 - INFO - Step 1: Fetching articles for MSFT
+2026-02-01 23:10:08,905 - INFO - Successfully fetched articles for MSFT
+2026-02-01 23:10:08,905 - INFO - Step 2: Processing sentiment and updating database for MSFT
+2026-02-01 23:10:56,727 - INFO - Successfully processed sentiment and updated database for MSFT
+2026-02-01 23:11:06,728 - INFO - Processing ticker: GOOGL
+2026-02-01 23:11:06,728 - INFO - Step 1: Fetching articles for GOOGL
+2026-02-01 23:11:27,397 - INFO - Successfully fetched articles for GOOGL
+2026-02-01 23:11:27,397 - INFO - Step 2: Processing sentiment and updating database for GOOGL
+2026-02-01 23:11:57,718 - INFO - Successfully processed sentiment and updated database for GOOGL
+2026-02-01 23:12:07,719 - INFO - Completed batch 1
+2026-02-01 23:12:07,719 - INFO - Waiting 120 seconds before batch 2...
+2026-02-01 23:14:07,720 - INFO - Starting batch 2 with tickers: ['AMZN', 'TSLA']
+2026-02-01 23:14:07,721 - INFO - Processing ticker: AMZN
+2026-02-01 23:14:07,721 - INFO - Step 1: Fetching articles for AMZN
+2026-02-01 23:14:29,860 - INFO - Successfully fetched articles for AMZN
+2026-02-01 23:14:29,860 - INFO - Step 2: Processing sentiment and updating database for AMZN
+2026-02-01 23:15:08,955 - INFO - Successfully processed sentiment and updated database for AMZN
+2026-02-01 23:15:18,956 - INFO - Processing ticker: TSLA
+2026-02-01 23:15:18,956 - INFO - Step 1: Fetching articles for TSLA
+2026-02-01 23:15:42,276 - INFO - Successfully fetched articles for TSLA
+2026-02-01 23:15:42,276 - INFO - Step 2: Processing sentiment and updating database for TSLA
+2026-02-01 23:16:26,811 - INFO - Successfully processed sentiment and updated database for TSLA
+2026-02-01 23:16:36,812 - INFO - Completed batch 2
+2026-02-01 23:16:36,812 - INFO - Waiting 120 seconds before batch 3...
+2026-02-01 23:18:36,813 - INFO - Starting batch 3 with tickers: ['NVDA', 'AMD']
+2026-02-01 23:18:36,814 - INFO - Processing ticker: NVDA
+2026-02-01 23:18:36,814 - INFO - Step 1: Fetching articles for NVDA
+2026-02-01 23:18:55,384 - INFO - Successfully fetched articles for NVDA
+2026-02-01 23:18:55,385 - INFO - Step 2: Processing sentiment and updating database for NVDA
+2026-02-01 23:19:38,014 - INFO - Successfully processed sentiment and updated database for NVDA
+2026-02-01 23:19:48,015 - INFO - Processing ticker: AMD
+2026-02-01 23:19:48,015 - INFO - Step 1: Fetching articles for AMD
+2026-02-01 23:20:03,185 - INFO - Successfully fetched articles for AMD
+2026-02-01 23:20:03,186 - INFO - Step 2: Processing sentiment and updating database for AMD
+2026-02-01 23:20:27,266 - INFO - Successfully processed sentiment and updated database for AMD
+2026-02-01 23:20:37,267 - INFO - Completed batch 3
+2026-02-01 23:20:37,267 - INFO - === Scraping cycle completed in 720 seconds ===
+2026-02-01 23:20:37,267 - INFO - Scraping cycle completed successfully
+2026-02-01 23:20:37,267 - INFO - WARNING: Cycle took longer than interval (720 > 300 seconds)
+2026-02-01 23:20:37,267 - INFO - === Starting new scraping cycle ===
+2026-02-01 23:20:37,268 - INFO - Starting batch 1 with tickers: ['AAPL', 'MSFT', 'GOOGL']
+2026-02-01 23:20:37,268 - INFO - Processing ticker: AAPL
+2026-02-01 23:20:37,268 - INFO - Step 1: Fetching articles for AAPL
+2026-02-01 23:20:57,444 - INFO - Successfully fetched articles for AAPL
+2026-02-01 23:20:57,445 - INFO - Step 2: Processing sentiment and updating database for AAPL
+2026-02-01 23:21:39,991 - INFO - Successfully processed sentiment and updated database for AAPL
+2026-02-01 23:21:49,992 - INFO - Processing ticker: MSFT
+2026-02-01 23:21:49,992 - INFO - Step 1: Fetching articles for MSFT
+2026-02-01 23:21:52,960 - INFO - ERROR: Failed to fetch articles for MSFT
+2026-02-01 23:22:02,695 - INFO - Starting NLP scraper daemon with batched processing...
+2026-02-01 23:22:02,695 - INFO - Batch 1: ['AAPL', 'MSFT', 'GOOGL']
+2026-02-01 23:22:02,695 - INFO - Batch 2: ['AMZN', 'TSLA']
+2026-02-01 23:22:02,695 - INFO - Batch 3: ['NVDA', 'AMD']
+2026-02-01 23:22:02,695 - INFO - Interval: Every 300 seconds
+2026-02-01 23:22:02,695 - INFO - Batch delay: 120 seconds between batches
+2026-02-01 23:22:02,695 - INFO - === Starting new scraping cycle ===
+2026-02-01 23:22:02,695 - INFO - Starting batch 1 with tickers: ['AAPL', 'MSFT', 'GOOGL']
+2026-02-01 23:22:02,696 - INFO - Processing ticker: AAPL
+2026-02-01 23:22:02,696 - INFO - Step 1: Fetching articles for AAPL
+2026-02-01 23:22:21,796 - INFO - Found -10 new articles for AAPL
+2026-02-01 23:22:21,796 - INFO - SKIPPING AAPL - No new articles found since last cycle
+2026-02-01 23:22:31,796 - INFO - Processing ticker: MSFT
+2026-02-01 23:22:31,796 - INFO - Step 1: Fetching articles for MSFT
+2026-02-01 23:22:49,544 - INFO - Found 0 new articles for MSFT
+2026-02-01 23:22:49,545 - INFO - SKIPPING MSFT - No new articles found since last cycle
+2026-02-01 23:22:59,545 - INFO - Processing ticker: GOOGL
+2026-02-01 23:22:59,545 - INFO - Step 1: Fetching articles for GOOGL
+2026-02-01 23:23:19,981 - INFO - Found -9 new articles for GOOGL
+2026-02-01 23:23:19,981 - INFO - SKIPPING GOOGL - No new articles found since last cycle
+2026-02-01 23:23:29,982 - INFO - Completed batch 1
+2026-02-01 23:23:29,982 - INFO - Waiting 120 seconds before batch 2...
+2026-02-01 23:25:29,983 - INFO - Starting batch 2 with tickers: ['AMZN', 'TSLA']
+2026-02-01 23:25:29,983 - INFO - Processing ticker: AMZN
+2026-02-01 23:25:29,983 - INFO - Step 1: Fetching articles for AMZN
+2026-02-01 23:25:52,781 - INFO - Articles file for AMZN was recently modified (0s ago)
+2026-02-01 23:25:52,781 - INFO - Successfully fetched articles for AMZN - NEW ARTICLES FOUND
+2026-02-01 23:25:52,781 - INFO - Step 2: Processing sentiment and updating database for AMZN
+2026-02-01 23:26:16,862 - INFO - Starting NLP scraper daemon with batched processing...
+2026-02-01 23:26:16,862 - INFO - Batch 1: ['AAPL', 'MSFT', 'GOOGL']
+2026-02-01 23:26:16,863 - INFO - Batch 2: ['AMZN', 'TSLA']
+2026-02-01 23:26:16,863 - INFO - Batch 3: ['NVDA', 'AMD']
+2026-02-01 23:26:16,863 - INFO - Interval: Every 300 seconds
+2026-02-01 23:26:16,863 - INFO - Batch delay: 120 seconds between batches
+2026-02-01 23:26:16,863 - INFO - === Starting new scraping cycle ===
+2026-02-01 23:26:16,863 - INFO - Starting batch 1 with tickers: ['AAPL', 'MSFT', 'GOOGL']
+2026-02-01 23:26:16,863 - INFO - Processing ticker: AAPL
+2026-02-01 23:26:16,863 - INFO - Step 1: Fetching articles for AAPL
+2026-02-01 23:26:35,251 - INFO - 0 new articles for AAPL (all were duplicates)
+2026-02-01 23:26:35,251 - INFO - SKIPPING AAPL - No new articles found since last cycle
+2026-02-01 23:26:45,251 - INFO - Processing ticker: MSFT
+2026-02-01 23:26:45,252 - INFO - Step 1: Fetching articles for MSFT
+2026-02-01 23:27:04,279 - INFO - 0 new articles for MSFT (all were duplicates)
+2026-02-01 23:27:04,279 - INFO - SKIPPING MSFT - No new articles found since last cycle
+2026-02-01 23:27:14,279 - INFO - Processing ticker: GOOGL
+2026-02-01 23:27:14,280 - INFO - Step 1: Fetching articles for GOOGL
+2026-02-01 23:27:34,743 - INFO - 0 new articles for GOOGL (all were duplicates)
+2026-02-01 23:27:34,743 - INFO - SKIPPING GOOGL - No new articles found since last cycle
+2026-02-01 23:27:44,744 - INFO - Completed batch 1
+2026-02-01 23:27:44,744 - INFO - Waiting 120 seconds before batch 2...
+2026-02-01 23:29:44,745 - INFO - Starting batch 2 with tickers: ['AMZN', 'TSLA']
+2026-02-01 23:29:44,746 - INFO - Processing ticker: AMZN
+2026-02-01 23:29:44,746 - INFO - Step 1: Fetching articles for AMZN
+2026-02-01 23:30:09,318 - INFO - 0 new articles for AMZN (all were duplicates)
+2026-02-01 23:30:09,319 - INFO - SKIPPING AMZN - No new articles found since last cycle
+2026-02-01 23:30:19,319 - INFO - Processing ticker: TSLA
+2026-02-01 23:30:19,319 - INFO - Step 1: Fetching articles for TSLA
+2026-02-01 23:30:40,384 - INFO - 0 new articles for TSLA (all were duplicates)
+2026-02-01 23:30:40,385 - INFO - SKIPPING TSLA - No new articles found since last cycle
+2026-02-01 23:30:50,385 - INFO - Completed batch 2
+2026-02-01 23:30:50,385 - INFO - Waiting 120 seconds before batch 3...
+2026-02-01 23:32:22,795 - INFO - Starting NLP scraper daemon with batched processing and VM optimization... [Memory: 22.1MB]
+2026-02-01 23:32:22,795 - INFO - Batch 1: ['AAPL', 'MSFT', 'GOOGL'] [Memory: 22.2MB]
+2026-02-01 23:32:22,795 - INFO - Batch 2: ['AMZN', 'TSLA'] [Memory: 22.2MB]
+2026-02-01 23:32:22,795 - INFO - Batch 3: ['NVDA', 'AMD'] [Memory: 22.2MB]
+2026-02-01 23:32:22,796 - INFO - Interval: Every 300 seconds [Memory: 22.2MB]
+2026-02-01 23:32:22,796 - INFO - Batch delay: 120 seconds between batches [Memory: 22.2MB]
+2026-02-01 23:32:22,796 - INFO - VM Optimizations: Log rotation (10MB), Memory cleanup every 10 cycles [Memory: 22.2MB]
+2026-02-01 23:32:22,798 - INFO - Memory cleanup completed - Current usage: 22.2MB [Memory: 22.2MB]
+2026-02-01 23:32:22,798 - INFO - === Starting scraping cycle #1 === [Memory: 22.2MB]
+2026-02-01 23:32:22,798 - INFO - Starting batch 1 with tickers: ['AAPL', 'MSFT', 'GOOGL'] [Memory: 22.2MB]
+2026-02-01 23:32:22,798 - INFO - Processing ticker: AAPL [Memory: 22.2MB]
+2026-02-01 23:32:22,798 - INFO - Step 1: Fetching articles for AAPL [Memory: 22.2MB]
+2026-02-01 23:32:43,348 - INFO - 0 new articles for AAPL (all were duplicates) [Memory: 22.4MB]
+2026-02-01 23:32:43,349 - INFO - SKIPPING AAPL - No new articles found since last cycle [Memory: 22.4MB]
+2026-02-01 23:32:43,349 - INFO - Ticker AAPL processed in 20s [Memory: 22.4MB]
+2026-02-01 23:32:48,349 - INFO - Processing ticker: MSFT [Memory: 22.4MB]
+2026-02-01 23:32:48,350 - INFO - Step 1: Fetching articles for MSFT [Memory: 22.4MB]
+2026-02-01 23:33:08,133 - INFO - 0 new articles for MSFT (all were duplicates) [Memory: 22.4MB]
+2026-02-01 23:33:08,134 - INFO - SKIPPING MSFT - No new articles found since last cycle [Memory: 22.4MB]
+2026-02-01 23:33:08,134 - INFO - Ticker MSFT processed in 19s [Memory: 22.4MB]
+2026-02-01 23:33:13,134 - INFO - Processing ticker: GOOGL [Memory: 22.4MB]
+2026-02-01 23:33:13,135 - INFO - Step 1: Fetching articles for GOOGL [Memory: 22.4MB]
+2026-02-01 23:33:32,769 - INFO - 0 new articles for GOOGL (all were duplicates) [Memory: 22.4MB]
+2026-02-01 23:33:32,769 - INFO - SKIPPING GOOGL - No new articles found since last cycle [Memory: 22.4MB]
+2026-02-01 23:33:32,769 - INFO - Ticker GOOGL processed in 19s [Memory: 22.4MB]
+2026-02-01 23:33:37,769 - INFO - Completed batch 1 in 74s [Memory: 22.4MB]
+2026-02-01 23:33:37,769 - INFO - Waiting 120 seconds before batch 2... [Memory: 22.4MB]
+2026-02-01 23:35:37,771 - INFO - Starting batch 2 with tickers: ['AMZN', 'TSLA'] [Memory: 22.3MB]
+2026-02-01 23:35:37,771 - INFO - Processing ticker: AMZN [Memory: 22.3MB]
+2026-02-01 23:35:37,771 - INFO - Step 1: Fetching articles for AMZN [Memory: 22.3MB]
+2026-02-01 23:36:00,673 - INFO - 0 new articles for AMZN (all were duplicates) [Memory: 22.3MB]
+2026-02-01 23:36:00,673 - INFO - SKIPPING AMZN - No new articles found since last cycle [Memory: 22.3MB]
+2026-02-01 23:36:00,673 - INFO - Ticker AMZN processed in 22s [Memory: 22.4MB]
+2026-02-01 23:36:05,673 - INFO - Processing ticker: TSLA [Memory: 22.4MB]
+2026-02-01 23:36:05,674 - INFO - Step 1: Fetching articles for TSLA [Memory: 22.4MB]
+2026-02-01 23:36:11,670 - INFO - Daemon stopped by user [Memory: 22.4MB]
+2026-03-22 18:38:49,239 - INFO - Starting NLP scraper daemon with batched processing and VM optimization... [Memory: 22.4MB]
+2026-03-22 18:38:49,239 - INFO - Batch 1: ['AAPL', 'TSLA'] [Memory: 22.4MB]
+2026-03-22 18:38:49,239 - INFO - Batch 2: ['AMD', 'MSFT'] [Memory: 22.4MB]
+2026-03-22 18:38:49,239 - INFO - Batch 3: ['NVDA', 'AMZN'] [Memory: 22.4MB]
+2026-03-22 18:38:49,240 - INFO - Interval: Every 300 seconds [Memory: 22.4MB]
+2026-03-22 18:38:49,240 - INFO - Batch delay: 120 seconds between batches [Memory: 22.4MB]
+2026-03-22 18:38:49,240 - INFO - VM Optimizations: Log rotation (10MB), Memory cleanup every 10 cycles [Memory: 22.4MB]
+2026-03-22 18:38:49,242 - INFO - Memory cleanup completed - Current usage: 22.4MB [Memory: 22.4MB]
+2026-03-22 18:38:49,242 - INFO - === Starting scraping cycle #1 === [Memory: 22.4MB]
+2026-03-22 18:38:49,242 - INFO - Starting batch 1 with tickers: ['AAPL', 'TSLA'] [Memory: 22.4MB]
+2026-03-22 18:38:49,242 - INFO - Processing ticker: AAPL [Memory: 22.4MB]
+2026-03-22 18:38:49,242 - INFO - Step 1: Fetching articles for AAPL [Memory: 22.4MB]
+2026-03-22 18:39:20,031 - INFO - Found 81 new articles for AAPL [Memory: 22.7MB]
+2026-03-22 18:39:20,031 - INFO - Successfully fetched articles for AAPL - NEW ARTICLES FOUND [Memory: 22.7MB]
+2026-03-22 18:39:20,031 - INFO - Step 2: Processing sentiment and updating database for AAPL [Memory: 22.7MB]
+2026-03-22 18:44:42,152 - INFO - Starting NLP scraper daemon with batched processing and VM optimization... [Memory: 22.4MB]
+2026-03-22 18:44:42,152 - INFO - Batch 1: ['AAPL', 'TSLA'] [Memory: 22.4MB]
+2026-03-22 18:44:42,152 - INFO - Batch 2: ['AMD', 'MSFT'] [Memory: 22.4MB]
+2026-03-22 18:44:42,152 - INFO - Batch 3: ['NVDA', 'AMZN'] [Memory: 22.4MB]
+2026-03-22 18:44:42,152 - INFO - Interval: Every 300 seconds [Memory: 22.4MB]
+2026-03-22 18:44:42,152 - INFO - Batch delay: 120 seconds between batches [Memory: 22.4MB]
+2026-03-22 18:44:42,152 - INFO - VM Optimizations: Log rotation (10MB), Memory cleanup every 10 cycles [Memory: 22.4MB]
+2026-03-22 18:44:42,154 - INFO - Memory cleanup completed - Current usage: 22.4MB [Memory: 22.4MB]
+2026-03-22 18:44:42,155 - INFO - === Starting scraping cycle #1 === [Memory: 22.4MB]
+2026-03-22 18:44:42,155 - INFO - Starting batch 1 with tickers: ['AAPL', 'TSLA'] [Memory: 22.4MB]
+2026-03-22 18:44:42,155 - INFO - Processing ticker: AAPL [Memory: 22.4MB]
+2026-03-22 18:44:42,155 - INFO - Step 1: Fetching articles for AAPL [Memory: 22.4MB]
+2026-03-22 18:45:06,426 - INFO - AAPL: 0 new articles (duplicates) [Memory: 22.6MB]
+2026-03-22 18:45:06,426 - INFO - SKIPPING AAPL - No new articles found since last cycle [Memory: 22.6MB]
+2026-03-22 18:45:06,427 - INFO - Ticker AAPL processed in 24s [Memory: 22.6MB]
+2026-03-22 18:45:11,427 - INFO - Processing ticker: TSLA [Memory: 22.6MB]
+2026-03-22 18:45:11,427 - INFO - Step 1: Fetching articles for TSLA [Memory: 22.6MB]
+2026-03-22 18:45:36,260 - INFO - TSLA: 123 new articles found [Memory: 22.7MB]
+2026-03-22 18:45:36,260 - INFO - Successfully fetched articles for TSLA - NEW ARTICLES FOUND [Memory: 22.7MB]
+2026-03-22 18:45:36,261 - INFO - Step 2: Processing sentiment and updating database for TSLA [Memory: 22.7MB]
+2026-03-22 18:46:24,253 - INFO - ERROR: Failed to process sentiment for TSLA [Memory: 22.6MB]
+2026-03-22 19:01:36,939 - INFO - Starting NLP scraper daemon with batched processing and VM optimization... [Memory: 22.5MB]
+2026-03-22 19:01:36,939 - INFO - Batch 1: ['AAPL', 'TSLA'] [Memory: 22.5MB]
+2026-03-22 19:01:36,940 - INFO - Batch 2: ['AMD', 'MSFT'] [Memory: 22.5MB]
+2026-03-22 19:01:36,940 - INFO - Batch 3: ['NVDA', 'AMZN'] [Memory: 22.5MB]
+2026-03-22 19:01:36,940 - INFO - Interval: Every 300 seconds [Memory: 22.5MB]
+2026-03-22 19:01:36,940 - INFO - Batch delay: 120 seconds between batches [Memory: 22.5MB]
+2026-03-22 19:01:36,940 - INFO - VM Optimizations: Log rotation (10MB), Memory cleanup every 10 cycles [Memory: 22.5MB]
+2026-03-22 19:01:36,942 - INFO - Memory cleanup completed - Current usage: 22.5MB [Memory: 22.5MB]
+2026-03-22 19:01:36,942 - INFO - === Starting scraping cycle #1 === [Memory: 22.5MB]
+2026-03-22 19:01:36,942 - INFO - Starting batch 1 with tickers: ['AAPL', 'TSLA'] [Memory: 22.5MB]
+2026-03-22 19:01:36,942 - INFO - Processing ticker: AAPL [Memory: 22.5MB]
+2026-03-22 19:01:36,943 - INFO - Step 1: Fetching articles for AAPL [Memory: 22.5MB]
+2026-03-22 19:02:02,708 - INFO - AAPL: 0 new articles (duplicates) [Memory: 22.7MB]
+2026-03-22 19:02:02,708 - INFO - SKIPPING AAPL - No new articles found since last cycle [Memory: 22.7MB]
+2026-03-22 19:02:02,708 - INFO - Ticker AAPL processed in 25s [Memory: 22.7MB]
+2026-03-22 19:02:07,709 - INFO - Processing ticker: TSLA [Memory: 22.8MB]
+2026-03-22 19:02:07,709 - INFO - Step 1: Fetching articles for TSLA [Memory: 22.8MB]
+2026-03-22 19:02:27,053 - INFO - TSLA: 0 new articles (duplicates) [Memory: 22.8MB]
+2026-03-22 19:02:27,054 - INFO - SKIPPING TSLA - No new articles found since last cycle [Memory: 22.8MB]
+2026-03-22 19:02:27,054 - INFO - Ticker TSLA processed in 19s [Memory: 22.8MB]
+2026-03-22 19:02:32,054 - INFO - Completed batch 1 in 55s [Memory: 22.8MB]
+2026-03-22 19:02:32,054 - INFO - Waiting 120 seconds before batch 2... [Memory: 22.8MB]
+2026-03-22 19:07:30,626 - INFO - Starting NLP scraper daemon with batched processing and VM optimization... [Memory: 22.5MB]
+2026-03-22 19:07:30,626 - INFO - Batch 1: ['AAPL', 'TSLA'] [Memory: 22.5MB]
+2026-03-22 19:07:30,626 - INFO - Batch 2: ['AMD', 'MSFT'] [Memory: 22.5MB]
+2026-03-22 19:07:30,626 - INFO - Batch 3: ['NVDA', 'AMZN'] [Memory: 22.5MB]
+2026-03-22 19:07:30,627 - INFO - Interval: Every 300 seconds [Memory: 22.5MB]
+2026-03-22 19:07:30,627 - INFO - Batch delay: 120 seconds between batches [Memory: 22.5MB]
+2026-03-22 19:07:30,627 - INFO - VM Optimizations: Log rotation (10MB), Memory cleanup every 10 cycles [Memory: 22.5MB]
+2026-03-22 19:07:30,629 - INFO - Memory cleanup completed - Current usage: 22.5MB [Memory: 22.5MB]
+2026-03-22 19:07:30,629 - INFO - === Starting scraping cycle #1 === [Memory: 22.5MB]
+2026-03-22 19:07:30,629 - INFO - Starting batch 1 with tickers: ['AAPL', 'TSLA'] [Memory: 22.5MB]
+2026-03-22 19:07:30,629 - INFO - Processing ticker: AAPL [Memory: 22.5MB]
+2026-03-22 19:07:30,630 - INFO - Step 1: Fetching articles for AAPL [Memory: 22.5MB]
+2026-03-22 19:07:53,960 - INFO - AAPL: 0 new articles (duplicates) [Memory: 22.7MB]
+2026-03-22 19:07:53,961 - INFO - SKIPPING AAPL - No new articles found since last cycle [Memory: 22.7MB]
+2026-03-22 19:07:53,961 - INFO - Ticker AAPL processed in 23s [Memory: 22.7MB]
+2026-03-22 19:07:58,961 - INFO - Processing ticker: TSLA [Memory: 22.7MB]
+2026-03-22 19:07:58,961 - INFO - Step 1: Fetching articles for TSLA [Memory: 22.7MB]
+2026-03-22 19:08:17,761 - INFO - TSLA: 0 new articles (duplicates) [Memory: 22.8MB]
+2026-03-22 19:08:17,761 - INFO - SKIPPING TSLA - No new articles found since last cycle [Memory: 22.8MB]
+2026-03-22 19:08:17,761 - INFO - Ticker TSLA processed in 18s [Memory: 22.8MB]
+2026-03-22 19:08:22,762 - INFO - Completed batch 1 in 52s [Memory: 22.8MB]
+2026-03-22 19:08:22,762 - INFO - Waiting 120 seconds before batch 2... [Memory: 22.8MB]
+2026-03-22 19:10:22,763 - INFO - Starting batch 2 with tickers: ['AMD', 'MSFT'] [Memory: 22.7MB]
+2026-03-22 19:10:22,763 - INFO - Processing ticker: AMD [Memory: 22.7MB]
+2026-03-22 19:10:22,763 - INFO - Step 1: Fetching articles for AMD [Memory: 22.7MB]
+2026-03-22 19:10:44,932 - INFO - AMD: 39 new articles found [Memory: 22.7MB]
+2026-03-22 19:10:44,933 - INFO - Successfully fetched articles for AMD - NEW ARTICLES FOUND [Memory: 22.7MB]
+2026-03-22 19:10:44,933 - INFO - Step 2: Processing sentiment and updating database for AMD [Memory: 22.7MB]
+2026-03-22 19:11:07,176 - INFO - Successfully processed sentiment and updated database for AMD [Memory: 22.9MB]
+2026-03-22 19:11:07,176 - INFO - Ticker AMD processed in 44s [Memory: 22.9MB]
+2026-03-22 19:11:12,176 - INFO - Processing ticker: MSFT [Memory: 22.9MB]
+2026-03-22 19:11:12,177 - INFO - Step 1: Fetching articles for MSFT [Memory: 22.9MB]
+2026-03-22 19:11:38,503 - INFO - MSFT: 125 new articles found [Memory: 22.3MB]
+2026-03-22 19:11:38,503 - INFO - Successfully fetched articles for MSFT - NEW ARTICLES FOUND [Memory: 22.3MB]
+2026-03-22 19:11:38,503 - INFO - Step 2: Processing sentiment and updating database for MSFT [Memory: 22.3MB]
+2026-03-22 19:12:05,442 - INFO - Successfully processed sentiment and updated database for MSFT [Memory: 22.5MB]
+2026-03-22 19:12:05,443 - INFO - Ticker MSFT processed in 53s [Memory: 22.5MB]
+2026-03-22 19:12:10,443 - INFO - Completed batch 2 in 107s [Memory: 22.5MB]
+2026-03-22 19:12:10,443 - INFO - Waiting 120 seconds before batch 3... [Memory: 22.5MB]
+2026-03-22 19:14:10,444 - INFO - Starting batch 3 with tickers: ['NVDA', 'AMZN'] [Memory: 22.6MB]
+2026-03-22 19:14:10,444 - INFO - Processing ticker: NVDA [Memory: 22.6MB]
+2026-03-22 19:14:10,444 - INFO - Step 1: Fetching articles for NVDA [Memory: 22.6MB]
+2026-03-22 19:14:48,133 - INFO - NVDA: 471 new articles found [Memory: 22.6MB]
+2026-03-22 19:14:48,133 - INFO - Successfully fetched articles for NVDA - NEW ARTICLES FOUND [Memory: 22.6MB]
+2026-03-22 19:14:48,133 - INFO - Step 2: Processing sentiment and updating database for NVDA [Memory: 22.6MB]
+2026-03-22 19:15:40,065 - INFO - Successfully processed sentiment and updated database for NVDA [Memory: 22.8MB]
+2026-03-22 19:15:40,065 - INFO - Ticker NVDA processed in 89s [Memory: 22.8MB]
+2026-03-22 19:15:45,065 - INFO - Processing ticker: AMZN [Memory: 22.8MB]
+2026-03-22 19:15:45,066 - INFO - Step 1: Fetching articles for AMZN [Memory: 22.8MB]
+2026-03-22 19:16:12,889 - INFO - AMZN: 158 new articles found [Memory: 22.4MB]
+2026-03-22 19:16:12,889 - INFO - Successfully fetched articles for AMZN - NEW ARTICLES FOUND [Memory: 22.4MB]
+2026-03-22 19:16:12,889 - INFO - Step 2: Processing sentiment and updating database for AMZN [Memory: 22.4MB]
+2026-03-22 19:16:42,562 - INFO - Successfully processed sentiment and updated database for AMZN [Memory: 22.6MB]
+2026-03-22 19:16:42,562 - INFO - Ticker AMZN processed in 57s [Memory: 22.6MB]
+2026-03-22 19:16:47,563 - INFO - Completed batch 3 in 157s [Memory: 22.6MB]
+2026-03-22 19:16:47,563 - INFO - === Scraping cycle #1 completed in 556 seconds === [Memory: 22.6MB]
+2026-03-22 19:16:47,563 - INFO - Current skip rate: 33.3% (2/6) [Memory: 22.6MB]
+2026-03-22 19:16:47,563 - INFO - Scraping cycle completed successfully [Memory: 22.6MB]
+2026-03-22 19:16:47,563 - INFO - WARNING: Cycle took longer than interval (556 > 300 seconds) [Memory: 22.6MB]
+2026-03-22 19:16:47,564 - INFO - Consider increasing SCRAPE_INTERVAL or optimizing processing time [Memory: 22.6MB]
+2026-03-22 19:16:47,564 - INFO - === Starting scraping cycle #2 === [Memory: 22.6MB]
+2026-03-22 19:16:47,564 - INFO - Starting batch 1 with tickers: ['AAPL', 'TSLA'] [Memory: 22.6MB]
+2026-03-22 19:16:47,564 - INFO - Processing ticker: AAPL [Memory: 22.6MB]
+2026-03-22 19:16:47,564 - INFO - Step 1: Fetching articles for AAPL [Memory: 22.6MB]
+2026-03-22 19:17:10,830 - INFO - AAPL: 0 new articles (duplicates) [Memory: 22.6MB]
+2026-03-22 19:17:10,830 - INFO - SKIPPING AAPL - No new articles found since last cycle [Memory: 22.6MB]
+2026-03-22 19:17:10,830 - INFO - Ticker AAPL processed in 23s [Memory: 22.6MB]
+2026-03-22 19:17:15,831 - INFO - Processing ticker: TSLA [Memory: 22.6MB]
+2026-03-22 19:17:15,831 - INFO - Step 1: Fetching articles for TSLA [Memory: 22.6MB]
+2026-03-22 19:17:46,505 - INFO - TSLA: 0 new articles (duplicates) [Memory: 22.6MB]
+2026-03-22 19:17:46,505 - INFO - SKIPPING TSLA - No new articles found since last cycle [Memory: 22.6MB]
+2026-03-22 19:17:46,505 - INFO - Ticker TSLA processed in 30s [Memory: 22.6MB]
+2026-03-22 19:17:51,506 - INFO - Completed batch 1 in 63s [Memory: 22.6MB]
+2026-03-22 19:17:51,506 - INFO - Waiting 120 seconds before batch 2... [Memory: 22.6MB]
+2026-03-22 19:19:51,507 - INFO - Starting batch 2 with tickers: ['AMD', 'MSFT'] [Memory: 22.6MB]
+2026-03-22 19:19:51,507 - INFO - Processing ticker: AMD [Memory: 22.6MB]
+2026-03-22 19:19:51,507 - INFO - Step 1: Fetching articles for AMD [Memory: 22.6MB]
+2026-03-22 19:20:11,272 - INFO - AMD: 0 new articles (duplicates) [Memory: 22.6MB]
+2026-03-22 19:20:11,272 - INFO - SKIPPING AMD - No new articles found since last cycle [Memory: 22.6MB]
+2026-03-22 19:20:11,272 - INFO - Ticker AMD processed in 19s [Memory: 22.6MB]
+2026-03-22 19:20:16,273 - INFO - Processing ticker: MSFT [Memory: 22.6MB]
+2026-03-22 19:20:16,273 - INFO - Step 1: Fetching articles for MSFT [Memory: 22.6MB]
+2026-03-22 19:20:37,054 - INFO - MSFT: 0 new articles (duplicates) [Memory: 22.6MB]
+2026-03-22 19:20:37,054 - INFO - SKIPPING MSFT - No new articles found since last cycle [Memory: 22.6MB]
+2026-03-22 19:20:37,055 - INFO - Ticker MSFT processed in 20s [Memory: 22.6MB]
+2026-03-22 19:20:42,055 - INFO - Completed batch 2 in 50s [Memory: 22.6MB]
+2026-03-22 19:20:42,055 - INFO - Waiting 120 seconds before batch 3... [Memory: 22.6MB]
+2026-03-22 19:22:42,055 - INFO - Starting batch 3 with tickers: ['NVDA', 'AMZN'] [Memory: 22.6MB]
+2026-03-22 19:22:42,056 - INFO - Processing ticker: NVDA [Memory: 22.6MB]
+2026-03-22 19:22:42,056 - INFO - Step 1: Fetching articles for NVDA [Memory: 22.6MB]
+2026-03-22 19:22:44,198 - INFO - ERROR: Failed to fetch articles for NVDA [Memory: 22.6MB]
+2026-03-22 19:22:44,198 - INFO - Error output: Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\Kaan Keskindil\MQS\MQSMaster\NLP\fetch_articles.py", line 329, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\Kaan Keskindil\MQS\MQSMaster\NLP\fetch_articles.py", line 317, in main
+    yahoo_news_df = pd.DataFrame(yahoo)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\pandas\core\frame.py", line 829, in __init__
+    data = list(data)
+  File "C:\Users\Kaan Keskindil\MQS\MQSMaster\NLP\fetch_alt_articles.py", line 171, in scrape_yahoo
+    news = asset.news
+           ^^^^^^^^^^
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\ticker.py", line 312, in news
+    return self.get_news()
+           ~~~~~~~~~~~~~^^
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\base.py", line 596, in get_news
+    data = self._data.post(url, body=payload)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\utils.py", line 95, in wrapper
+    result = func(*args, **kwargs)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\data.py", line 389, in post
+    return self._make_request(url, request_method = self._session.post, body=body, params=params, timeout=timeout, data=data)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\utils.py", line 95, in wrapper
+    result = func(*args, **kwargs)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\data.py", line 409, in _make_request
+    crumb, strategy = self._get_cookie_and_crumb()
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\utils.py", line 95, in wrapper
+    result = func(*args, **kwargs)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\data.py", line 365, in _get_cookie_and_crumb
+    crumb = self._get_cookie_and_crumb_basic(timeout)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\utils.py", line 95, in wrapper
+    result = func(*args, **kwargs)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\data.py", line 246, in _get_cookie_and_crumb_basic
+    return self._get_crumb_basic(timeout)
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\utils.py", line 95, in wrapper
+    result = func(*args, **kwargs)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\data.py", line 233, in _get_crumb_basic
+    raise YFRateLimitError()
+yfinance.exceptions.YFRateLimitError: Too Many Requests. Rate limited. Try after a while.
+ [Memory: 22.6MB]
+2026-03-22 19:22:44,198 - INFO - Ticker NVDA processed in 2s [Memory: 22.6MB]
+2026-03-22 19:22:49,199 - INFO - Processing ticker: AMZN [Memory: 22.6MB]
+2026-03-22 19:22:49,199 - INFO - Step 1: Fetching articles for AMZN [Memory: 22.6MB]
+2026-03-22 19:23:10,895 - INFO - AMZN: 0 new articles (duplicates) [Memory: 22.6MB]
+2026-03-22 19:23:10,895 - INFO - SKIPPING AMZN - No new articles found since last cycle [Memory: 22.6MB]
+2026-03-22 19:23:10,895 - INFO - Ticker AMZN processed in 21s [Memory: 22.6MB]
+2026-03-22 19:23:15,896 - INFO - Completed batch 3 in 33s [Memory: 22.6MB]
+2026-03-22 19:23:15,896 - INFO - === Scraping cycle #2 completed in 388 seconds === [Memory: 22.6MB]
+2026-03-22 19:23:15,896 - INFO - Current skip rate: 66.7% (8/12) [Memory: 22.6MB]
+2026-03-22 19:23:15,896 - INFO - Scraping cycle completed successfully [Memory: 22.6MB]
+2026-03-22 19:23:15,897 - INFO - WARNING: Cycle took longer than interval (388 > 300 seconds) [Memory: 22.6MB]
+2026-03-22 19:23:15,897 - INFO - Consider increasing SCRAPE_INTERVAL or optimizing processing time [Memory: 22.6MB]
+2026-03-22 19:23:15,897 - INFO - === Starting scraping cycle #3 === [Memory: 22.6MB]
+2026-03-22 19:23:15,897 - INFO - Starting batch 1 with tickers: ['AAPL', 'TSLA'] [Memory: 22.6MB]
+2026-03-22 19:23:15,897 - INFO - Processing ticker: AAPL [Memory: 22.6MB]
+2026-03-22 19:23:15,897 - INFO - Step 1: Fetching articles for AAPL [Memory: 22.6MB]
+2026-03-22 19:23:38,417 - INFO - AAPL: 0 new articles (duplicates) [Memory: 22.6MB]
+2026-03-22 19:23:38,417 - INFO - SKIPPING AAPL - No new articles found since last cycle [Memory: 22.6MB]
+2026-03-22 19:23:38,417 - INFO - Ticker AAPL processed in 22s [Memory: 22.6MB]
+2026-03-22 19:23:43,418 - INFO - Processing ticker: TSLA [Memory: 22.6MB]
+2026-03-22 19:23:43,418 - INFO - Step 1: Fetching articles for TSLA [Memory: 22.6MB]
+2026-03-22 19:23:45,377 - INFO - ERROR: Failed to fetch articles for TSLA [Memory: 22.6MB]
+2026-03-22 19:23:45,377 - INFO - Error output: Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\Kaan Keskindil\MQS\MQSMaster\NLP\fetch_articles.py", line 329, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\Kaan Keskindil\MQS\MQSMaster\NLP\fetch_articles.py", line 317, in main
+    yahoo_news_df = pd.DataFrame(yahoo)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\pandas\core\frame.py", line 829, in __init__
+    data = list(data)
+  File "C:\Users\Kaan Keskindil\MQS\MQSMaster\NLP\fetch_alt_articles.py", line 171, in scrape_yahoo
+    news = asset.news
+           ^^^^^^^^^^
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\ticker.py", line 312, in news
+    return self.get_news()
+           ~~~~~~~~~~~~~^^
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\base.py", line 596, in get_news
+    data = self._data.post(url, body=payload)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\utils.py", line 95, in wrapper
+    result = func(*args, **kwargs)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\data.py", line 389, in post
+    return self._make_request(url, request_method = self._session.post, body=body, params=params, timeout=timeout, data=data)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\utils.py", line 95, in wrapper
+    result = func(*args, **kwargs)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\data.py", line 409, in _make_request
+    crumb, strategy = self._get_cookie_and_crumb()
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\utils.py", line 95, in wrapper
+    result = func(*args, **kwargs)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\data.py", line 365, in _get_cookie_and_crumb
+    crumb = self._get_cookie_and_crumb_basic(timeout)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\utils.py", line 95, in wrapper
+    result = func(*args, **kwargs)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\data.py", line 246, in _get_cookie_and_crumb_basic
+    return self._get_crumb_basic(timeout)
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\utils.py", line 95, in wrapper
+    result = func(*args, **kwargs)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\data.py", line 233, in _get_crumb_basic
+    raise YFRateLimitError()
+yfinance.exceptions.YFRateLimitError: Too Many Requests. Rate limited. Try after a while.
+ [Memory: 22.6MB]
+2026-03-22 19:23:45,378 - INFO - Ticker TSLA processed in 1s [Memory: 22.6MB]
+2026-03-22 19:23:50,378 - INFO - Completed batch 1 in 34s [Memory: 22.6MB]
+2026-03-22 19:23:50,378 - INFO - Waiting 120 seconds before batch 2... [Memory: 22.6MB]
+2026-03-22 19:25:50,379 - INFO - Starting batch 2 with tickers: ['AMD', 'MSFT'] [Memory: 22.6MB]
+2026-03-22 19:25:50,379 - INFO - Processing ticker: AMD [Memory: 22.6MB]
+2026-03-22 19:25:50,379 - INFO - Step 1: Fetching articles for AMD [Memory: 22.6MB]
+2026-03-22 19:25:52,344 - INFO - ERROR: Failed to fetch articles for AMD [Memory: 22.6MB]
+2026-03-22 19:25:52,344 - INFO - Error output: Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\Kaan Keskindil\MQS\MQSMaster\NLP\fetch_articles.py", line 329, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\Kaan Keskindil\MQS\MQSMaster\NLP\fetch_articles.py", line 317, in main
+    yahoo_news_df = pd.DataFrame(yahoo)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\pandas\core\frame.py", line 829, in __init__
+    data = list(data)
+  File "C:\Users\Kaan Keskindil\MQS\MQSMaster\NLP\fetch_alt_articles.py", line 171, in scrape_yahoo
+    news = asset.news
+           ^^^^^^^^^^
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\ticker.py", line 312, in news
+    return self.get_news()
+           ~~~~~~~~~~~~~^^
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\base.py", line 596, in get_news
+    data = self._data.post(url, body=payload)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\utils.py", line 95, in wrapper
+    result = func(*args, **kwargs)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\data.py", line 389, in post
+    return self._make_request(url, request_method = self._session.post, body=body, params=params, timeout=timeout, data=data)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\utils.py", line 95, in wrapper
+    result = func(*args, **kwargs)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\data.py", line 409, in _make_request
+    crumb, strategy = self._get_cookie_and_crumb()
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\utils.py", line 95, in wrapper
+    result = func(*args, **kwargs)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\data.py", line 365, in _get_cookie_and_crumb
+    crumb = self._get_cookie_and_crumb_basic(timeout)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\utils.py", line 95, in wrapper
+    result = func(*args, **kwargs)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\data.py", line 246, in _get_cookie_and_crumb_basic
+    return self._get_crumb_basic(timeout)
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\utils.py", line 95, in wrapper
+    result = func(*args, **kwargs)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\data.py", line 233, in _get_crumb_basic
+    raise YFRateLimitError()
+yfinance.exceptions.YFRateLimitError: Too Many Requests. Rate limited. Try after a while.
+ [Memory: 22.6MB]
+2026-03-22 19:25:52,344 - INFO - Ticker AMD processed in 1s [Memory: 22.6MB]
+2026-03-22 19:25:57,345 - INFO - Processing ticker: MSFT [Memory: 22.6MB]
+2026-03-22 19:25:57,345 - INFO - Step 1: Fetching articles for MSFT [Memory: 22.6MB]
+2026-03-22 19:26:19,480 - INFO - MSFT: 0 new articles (duplicates) [Memory: 22.6MB]
+2026-03-22 19:26:19,480 - INFO - SKIPPING MSFT - No new articles found since last cycle [Memory: 22.6MB]
+2026-03-22 19:26:19,481 - INFO - Ticker MSFT processed in 22s [Memory: 22.6MB]
+2026-03-22 19:26:24,481 - INFO - Completed batch 2 in 34s [Memory: 22.6MB]
+2026-03-22 19:26:24,481 - INFO - Waiting 120 seconds before batch 3... [Memory: 22.6MB]
+2026-03-22 19:28:24,482 - INFO - Starting batch 3 with tickers: ['NVDA', 'AMZN'] [Memory: 22.6MB]
+2026-03-22 19:28:24,482 - INFO - Processing ticker: NVDA [Memory: 22.6MB]
+2026-03-22 19:28:24,483 - INFO - Step 1: Fetching articles for NVDA [Memory: 22.6MB]
+2026-03-22 19:28:47,517 - INFO - NVDA: 0 new articles (duplicates) [Memory: 22.6MB]
+2026-03-22 19:28:47,518 - INFO - SKIPPING NVDA - No new articles found since last cycle [Memory: 22.6MB]
+2026-03-22 19:28:47,518 - INFO - Ticker NVDA processed in 23s [Memory: 22.6MB]
+2026-03-22 19:28:52,518 - INFO - Processing ticker: AMZN [Memory: 22.6MB]
+2026-03-22 19:28:52,518 - INFO - Step 1: Fetching articles for AMZN [Memory: 22.6MB]
+2026-03-22 19:29:14,347 - INFO - AMZN: 0 new articles (duplicates) [Memory: 22.6MB]
+2026-03-22 19:29:14,348 - INFO - SKIPPING AMZN - No new articles found since last cycle [Memory: 22.6MB]
+2026-03-22 19:29:14,348 - INFO - Ticker AMZN processed in 21s [Memory: 22.6MB]
+2026-03-22 19:29:19,348 - INFO - Completed batch 3 in 54s [Memory: 22.6MB]
+2026-03-22 19:29:19,348 - INFO - === Scraping cycle #3 completed in 363 seconds === [Memory: 22.6MB]
+2026-03-22 19:29:19,348 - INFO - Current skip rate: 77.8% (14/18) [Memory: 22.6MB]
+2026-03-22 19:29:19,349 - INFO - Scraping cycle completed successfully [Memory: 22.6MB]
+2026-03-22 19:29:19,349 - INFO - WARNING: Cycle took longer than interval (363 > 300 seconds) [Memory: 22.6MB]
+2026-03-22 19:29:19,349 - INFO - Consider increasing SCRAPE_INTERVAL or optimizing processing time [Memory: 22.6MB]
+2026-03-22 19:29:19,349 - INFO - === Starting scraping cycle #4 === [Memory: 22.6MB]
+2026-03-22 19:29:19,349 - INFO - Starting batch 1 with tickers: ['AAPL', 'TSLA'] [Memory: 22.6MB]
+2026-03-22 19:29:19,349 - INFO - Processing ticker: AAPL [Memory: 22.6MB]
+2026-03-22 19:29:19,349 - INFO - Step 1: Fetching articles for AAPL [Memory: 22.6MB]
+2026-03-22 19:29:42,534 - INFO - AAPL: 0 new articles (duplicates) [Memory: 22.6MB]
+2026-03-22 19:29:42,534 - INFO - SKIPPING AAPL - No new articles found since last cycle [Memory: 22.6MB]
+2026-03-22 19:29:42,534 - INFO - Ticker AAPL processed in 23s [Memory: 22.6MB]
+2026-03-22 19:29:47,535 - INFO - Processing ticker: TSLA [Memory: 22.6MB]
+2026-03-22 19:29:47,535 - INFO - Step 1: Fetching articles for TSLA [Memory: 22.6MB]
+2026-03-22 19:29:49,566 - INFO - ERROR: Failed to fetch articles for TSLA [Memory: 22.6MB]
+2026-03-22 19:29:49,566 - INFO - Error output: Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "C:\Users\Kaan Keskindil\MQS\MQSMaster\NLP\fetch_articles.py", line 329, in <module>
+    main()
+    ~~~~^^
+  File "C:\Users\Kaan Keskindil\MQS\MQSMaster\NLP\fetch_articles.py", line 317, in main
+    yahoo_news_df = pd.DataFrame(yahoo)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\pandas\core\frame.py", line 829, in __init__
+    data = list(data)
+  File "C:\Users\Kaan Keskindil\MQS\MQSMaster\NLP\fetch_alt_articles.py", line 171, in scrape_yahoo
+    news = asset.news
+           ^^^^^^^^^^
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\ticker.py", line 312, in news
+    return self.get_news()
+           ~~~~~~~~~~~~~^^
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\base.py", line 596, in get_news
+    data = self._data.post(url, body=payload)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\utils.py", line 95, in wrapper
+    result = func(*args, **kwargs)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\data.py", line 389, in post
+    return self._make_request(url, request_method = self._session.post, body=body, params=params, timeout=timeout, data=data)
+           ~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\utils.py", line 95, in wrapper
+    result = func(*args, **kwargs)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\data.py", line 409, in _make_request
+    crumb, strategy = self._get_cookie_and_crumb()
+                      ~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\utils.py", line 95, in wrapper
+    result = func(*args, **kwargs)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\data.py", line 365, in _get_cookie_and_crumb
+    crumb = self._get_cookie_and_crumb_basic(timeout)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\utils.py", line 95, in wrapper
+    result = func(*args, **kwargs)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\data.py", line 246, in _get_cookie_and_crumb_basic
+    return self._get_crumb_basic(timeout)
+           ~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\utils.py", line 95, in wrapper
+    result = func(*args, **kwargs)
+  File "C:\Users\Kaan Keskindil\AppData\Roaming\Python\Python314\site-packages\yfinance\data.py", line 233, in _get_crumb_basic
+    raise YFRateLimitError()
+yfinance.exceptions.YFRateLimitError: Too Many Requests. Rate limited. Try after a while.
+ [Memory: 22.6MB]
+2026-03-22 19:29:49,567 - INFO - Ticker TSLA processed in 2s [Memory: 22.6MB]
+2026-03-22 19:29:54,567 - INFO - Completed batch 1 in 35s [Memory: 22.6MB]
+2026-03-22 19:29:54,568 - INFO - Waiting 120 seconds before batch 2... [Memory: 22.6MB]
+2026-03-22 19:31:54,568 - INFO - Starting batch 2 with tickers: ['AMD', 'MSFT'] [Memory: 22.6MB]
+2026-03-22 19:31:54,568 - INFO - Processing ticker: AMD [Memory: 22.6MB]
+2026-03-22 19:31:54,568 - INFO - Step 1: Fetching articles for AMD [Memory: 22.6MB]
+2026-03-22 19:32:45,403 - INFO - AMD: 0 new articles (duplicates) [Memory: 22.6MB]
+2026-03-22 19:32:45,403 - INFO - SKIPPING AMD - No new articles found since last cycle [Memory: 22.6MB]
+2026-03-22 19:32:45,403 - INFO - Ticker AMD processed in 50s [Memory: 22.6MB]
+2026-03-22 19:32:50,404 - INFO - Processing ticker: MSFT [Memory: 22.6MB]
+2026-03-22 19:32:50,404 - INFO - Step 1: Fetching articles for MSFT [Memory: 22.6MB]
+2026-03-22 19:33:12,559 - INFO - MSFT: 0 new articles (duplicates) [Memory: 22.6MB]
+2026-03-22 19:33:12,559 - INFO - SKIPPING MSFT - No new articles found since last cycle [Memory: 22.6MB]
+2026-03-22 19:33:12,559 - INFO - Ticker MSFT processed in 22s [Memory: 22.6MB]
+2026-03-22 19:33:17,559 - INFO - Completed batch 2 in 82s [Memory: 22.6MB]
+2026-03-22 19:33:17,560 - INFO - Waiting 120 seconds before batch 3... [Memory: 22.6MB]
+2026-03-22 19:35:17,560 - INFO - Starting batch 3 with tickers: ['NVDA', 'AMZN'] [Memory: 22.6MB]
+2026-03-22 19:35:17,561 - INFO - Processing ticker: NVDA [Memory: 22.6MB]
+2026-03-22 19:35:17,561 - INFO - Step 1: Fetching articles for NVDA [Memory: 22.6MB]
