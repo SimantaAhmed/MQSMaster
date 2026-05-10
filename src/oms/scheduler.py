@@ -31,12 +31,18 @@ class AlgoScheduler:
         *,
         tick_seconds: float = 5.0,
         max_retries: int = 1,
+        retry_delay_seconds: Optional[float] = None,
         now_fn: Optional[Callable[[], datetime]] = None,
     ) -> None:
         self._executor = executor
         self._order_manager = order_manager
         self._tick_seconds = max(0.1, float(tick_seconds))
         self._max_retries = max(0, int(max_retries))
+        self._retry_delay_seconds = (
+            self._tick_seconds
+            if retry_delay_seconds is None
+            else max(0.0, float(retry_delay_seconds))
+        )
         self._now_fn = now_fn or (lambda: datetime.now(timezone.utc))
 
         self._lock = threading.Lock()
@@ -52,6 +58,12 @@ class AlgoScheduler:
     def running(self) -> bool:
         return self._running
 
+    def next_due_time(self) -> Optional[datetime]:
+        with self._lock:
+            if not self._heap:
+                return None
+            return datetime.fromtimestamp(self._heap[0].due_ts, tz=timezone.utc)
+
     def start(self) -> None:
         with self._lock:
             if self._running:
@@ -65,14 +77,27 @@ class AlgoScheduler:
             self._thread.start()
         LOGGER.info("AlgoScheduler started.")
 
-    def stop(self, *, wait: bool = True, timeout: Optional[float] = 10.0) -> None:
+    def stop(
+        self,
+        *,
+        wait: bool = True,
+        timeout: Optional[float] = 10.0,
+        cancel_pending: bool = True,
+    ) -> None:
         with self._lock:
             self._running = False
+            pending_items = list(self._heap) if cancel_pending else []
+            if cancel_pending:
+                self._heap.clear()
         self._wake_event.set()
 
         thread = self._thread
         if wait and thread and thread.is_alive():
             thread.join(timeout=timeout)
+
+        for item in pending_items:
+            self._notify_child_cancelled(item.child_order)
+
         LOGGER.info("AlgoScheduler stopped.")
 
     def enqueue(self, child_order: Any) -> None:
@@ -86,8 +111,15 @@ class AlgoScheduler:
         with self._lock:
             return len(self._heap)
 
-    def _enqueue_with_attempts(self, *, child_order: Any, attempts: int) -> None:
-        due_ts = self._to_epoch_seconds(getattr(child_order, "scheduled_time", None))
+    def _enqueue_with_attempts(
+        self,
+        *,
+        child_order: Any,
+        attempts: int,
+        due_ts: Optional[float] = None,
+    ) -> None:
+        if due_ts is None:
+            due_ts = self._to_epoch_seconds(getattr(child_order, "scheduled_time", None))
         item = _QueueItem(
             due_ts=due_ts,
             seq=next(self._seq),
@@ -144,11 +176,11 @@ class AlgoScheduler:
             self._enqueue_with_attempts(
                 child_order=child_order,
                 attempts=item.attempts + 1,
+                due_ts=(self._to_epoch_seconds(self._now_fn()) + self._retry_delay_seconds),
             )
             return
 
-        # No retries left, so we cancel and tell the manager.
-        self._mark_cancelled(child_order)
+        # The scheduler reports terminal failure; lifecycle state belongs upstream.
         self._notify_child_cancelled(child_order)
 
     def _notify_child_filled(self, child_order: Any, fill_result: Any) -> None:
@@ -156,8 +188,17 @@ class AlgoScheduler:
             self._order_manager.on_child_filled(child_order, fill_result)
 
     def _notify_child_cancelled(self, child_order: Any) -> None:
-        if self._order_manager and hasattr(self._order_manager, "on_child_cancelled"):
-            self._order_manager.on_child_cancelled(child_order)
+        if not self._order_manager:
+            return
+
+        callback = getattr(self._order_manager, "on_child_cancelled", None)
+        if not callable(callback):
+            return
+
+        try:
+            callback(child_order, reason="scheduler-cancelled")
+        except TypeError:
+            callback(child_order)
 
     @staticmethod
     def _to_epoch_seconds(value: Any) -> float:
@@ -175,17 +216,3 @@ class AlgoScheduler:
 
         return time.time()
 
-    @staticmethod
-    def _mark_cancelled(child_order: Any) -> None:
-        status = getattr(child_order, "status", None)
-        if status is None:
-            return
-
-        enum_cls = status.__class__
-        try:
-            if hasattr(enum_cls, "CANCELLED"):
-                setattr(child_order, "status", enum_cls.CANCELLED)
-            else:
-                setattr(child_order, "status", "CANCELLED")
-        except Exception:
-            LOGGER.exception("Failed to mark child order as CANCELLED.")

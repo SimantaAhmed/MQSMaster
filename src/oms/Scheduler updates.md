@@ -10,6 +10,14 @@ Added the first OMS execution flow for live trading. This introduces a backgroun
 - One retry before cancellation.
 - Fill and cancel callbacks to order manager.
 
+### Scheduler updates
+
+- Removed direct lifecycle ownership from the scheduler.
+- Retry now happens on the next tick instead of immediately.
+- Pending queued child orders are cancelled on scheduler stop.
+- Added basic scheduler observability with next due time support.
+- Added focused scheduler tests for execution, retry, and shutdown cancellation.
+
 ### Added OMS order models
 
 - ParentOrder and ChildOrder.
