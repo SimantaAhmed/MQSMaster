@@ -203,6 +203,67 @@ class tradeExecutor:
             port_notional_val,
         )
 
+    def execute_child_order(self, child_order):
+        """
+        Executes one pre-sized OMS child order.
+        Scheduler handles timing; executor only applies fill + DB writes.
+        """
+        ticker = child_order.ticker
+        signal_type = child_order.side.value if hasattr(child_order.side, "value") else str(child_order.side)
+        signal_type = signal_type.upper().strip()
+        if signal_type not in ("BUY", "SELL"):
+            raise ValueError(f"Unsupported child order side: {signal_type}")
+
+        quantity_to_trade = int(float(child_order.target_quantity))
+        if quantity_to_trade <= 0:
+            raise ValueError(f"Invalid child order quantity for {ticker}: {child_order.target_quantity}")
+
+        exec_price = self.get_current_price(ticker)
+        if exec_price <= 0:
+            raise RuntimeError(f"Could not fetch valid execution price for {ticker}")
+
+        arrival_price = float(getattr(child_order, "arrival_price", exec_price) or exec_price)
+        slippage_bps = (
+            ((exec_price / arrival_price) - 1) * 10000 if arrival_price > 0 else 0.0
+        )
+
+        updated_cash = float(getattr(child_order, "cash_before", 0.0))
+        updated_quantity = float(getattr(child_order, "current_quantity_before", 0.0))
+        port_notional = float(getattr(child_order, "port_notional_before", 0.0))
+        trade_value = quantity_to_trade * exec_price
+
+        if signal_type == "BUY":
+            updated_cash -= trade_value
+            updated_quantity += quantity_to_trade
+            port_notional -= trade_value
+        else:
+            updated_cash += trade_value
+            updated_quantity -= quantity_to_trade
+            port_notional += trade_value
+
+        result = self.update_database(
+            getattr(child_order, "portfolio_id", ""),
+            ticker,
+            signal_type,
+            quantity_to_trade,
+            updated_cash,
+            updated_quantity,
+            arrival_price,
+            exec_price,
+            slippage_bps,
+            getattr(child_order, "scheduled_time", None),
+            port_notional,
+        )
+
+        child_order.filled_quantity = float(quantity_to_trade)
+        if hasattr(child_order, "status"):
+            status_cls = child_order.status.__class__
+            if hasattr(status_cls, "FILLED"):
+                child_order.status = status_cls.FILLED
+            else:
+                child_order.status = "FILLED"
+        return result
+
     def update_database(
         self,
         portfolio_id,

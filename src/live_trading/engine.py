@@ -9,6 +9,13 @@ import time
 from typing import List
 
 try:
+    from oms.order_manager import OrderManager
+    from oms.scheduler import AlgoScheduler
+except ImportError:
+    from src.oms.order_manager import OrderManager
+    from src.oms.scheduler import AlgoScheduler
+
+try:
     from portfolios.portfolio_BASE.strategy import BasePortfolio
 except ImportError:
     logging.warning(
@@ -29,7 +36,15 @@ class RunEngine:
     Updated to dynamically load configurations for each portfolio.
     """
 
-    def __init__(self, db_connector, executor, debug=False, max_consecutive_failures=5):
+    def __init__(
+        self,
+        db_connector,
+        executor,
+        debug=False,
+        max_consecutive_failures=5,
+        oms_enabled: bool = True,
+        scheduler_tick_seconds: float = 5.0,
+    ):
         self.logger = logging.getLogger(self.__class__.__name__)
         self.db_connector = db_connector
         self.executor = executor
@@ -39,6 +54,19 @@ class RunEngine:
 
         self.max_consecutive_failures = max_consecutive_failures
         self.failure_counts = {}
+
+        self.oms_enabled = bool(oms_enabled)
+        self.order_manager = None
+        self.scheduler = None
+        if self.oms_enabled:
+            self.order_manager = OrderManager(executor=self.executor)
+            self.scheduler = AlgoScheduler(
+                executor=self.executor,
+                order_manager=self.order_manager,
+                tick_seconds=scheduler_tick_seconds,
+                max_retries=1,
+            )
+            self.order_manager.bind_scheduler(self.scheduler)
 
     def load_portfolios(self, portfolio_classes: List[type[BasePortfolio]]):
         """
@@ -67,6 +95,7 @@ class RunEngine:
                     debug=self.debug,
                     config_dict=config_data,
                 )
+                portfolio_instance.order_manager = self.order_manager
                 self.portfolios.append(portfolio_instance)
                 self.failure_counts[portfolio_instance.portfolio_id] = 0
                 self.logger.info(
@@ -139,6 +168,9 @@ class RunEngine:
             self.logger.warning("No portfolios loaded. Exiting.")
             return
 
+        if self.scheduler is not None:
+            self.scheduler.start()
+
         self.logger.info(f"Starting RunEngine with {len(self.portfolios)} portfolios.")
         threads = []
         for portfolio in self.portfolios:
@@ -162,6 +194,9 @@ class RunEngine:
 
         for thread in threads:
             thread.join()
+
+        if self.scheduler is not None:
+            self.scheduler.stop(wait=True)
 
         self.logger.info(
             "All portfolio threads have been joined. RunEngine shutdown complete."

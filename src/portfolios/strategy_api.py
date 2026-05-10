@@ -49,8 +49,9 @@ class StrategyContext:
     """
     The master context object passed to the strategy's OnData method on each time step.
     It encapsulates MarketData, PortfolioManager, and provides trade execution methods"""
-    def __init__(self, market_data_df, cash_df, positions_df, port_notional_df, current_time, executor, portfolio_config):
+    def __init__(self, market_data_df, cash_df, positions_df, port_notional_df, current_time, executor, portfolio_config, order_manager=None):
         self._executor = executor
+        self._order_manager = order_manager
         self._portfolio_config = portfolio_config
         self._positions_df = positions_df
         effective_time = current_time
@@ -93,6 +94,24 @@ class StrategyContext:
                 self.time,
                 asset_data.Exists,
                 asset_data.Close,
+            )
+            return
+
+        oms_cfg = (self._portfolio_config or {}).get("oms") or {}
+        oms_enabled = bool(oms_cfg.get("enabled", False))
+
+        if self._order_manager is not None and oms_enabled:
+            self._order_manager.submit_order(
+                portfolio_id=self._portfolio_config['id'],
+                ticker=ticker,
+                side=signal_type,
+                confidence=confidence,
+                arrival_price=asset_data.Close,
+                cash=self.Portfolio.cash,
+                positions=self._positions_df,
+                port_notional=self.Portfolio.total_value,
+                ticker_weight=self.Portfolio.get_asset_weight(ticker, asset_data.Close),
+                timestamp=self.time,
             )
             return
 

@@ -55,6 +55,7 @@ class BasePortfolio(ABC):
         """
         self.db = db_connector
         self.executor = executor
+        self.order_manager = None
         self.running = True
         self.debug = debug
         self.backtest_start_date = backtest_start_date
@@ -84,6 +85,7 @@ class BasePortfolio(ABC):
             "weights": self.portfolio_weights,
             "poll_interval": self.poll_interval,
             "lookback_days": self.lookback_days,
+            "oms": config_dict.get("OMS", {}),
         }
 
         # --- Indicator Management ---
@@ -328,6 +330,7 @@ class BasePortfolio(ABC):
             port_notional_df=data.get("PORT_NOTIONAL"),
             current_time=current_time,
             executor=self.executor,
+            order_manager=self.order_manager,
             portfolio_config=self.portfolio_config_dict,
         )
 
